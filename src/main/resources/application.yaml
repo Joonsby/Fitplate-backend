@@ -1,3 +1,6 @@
 spring:
   application:
     name: fitplate-api
+gemini:
+  api-key: AIzaSyA_FN8926usB5N6rwkwFoRteU5jd0wRyL4
+  model: gemini-2.5-flash

@@ -19,10 +19,10 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")  // /api 경로의 모든 요청에 CORS 허용
-            .allowedOrigins("http://localhost:3000", "http://localhost:5173")  // 로컬 개발 환경 허용 (React 기본 포트)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // 지원하는 HTTP 메서드
+            .allowedOrigins("http://localhost:5173", "http://127.0.0.1:5173")  // 로컬 개발 환경 허용 (React 기본 포트)
+            .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")  // 지원하는 HTTP 메서드
             .allowedHeaders("*")  // 모든 헤더 허용
-            .allowCredentials(true)  // 쿠키 및 인증 정보 포함 허용
+            .allowCredentials(false)  // 쿠키 및 인증 정보 포함 허용
             .maxAge(3600);  // CORS 정책 캐시 시간 (초 단위)
     }
 }
