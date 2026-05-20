@@ -16,7 +16,10 @@ spring:
         jdbc:
           batch_size: 20
     open-in-view: false
-    show-sql: false
+    show-sql: true
+logging:
+  level:
+    org.hibernate.SQL: debug
 gemini:
   api-key: AIzaSyA_FN8926usB5N6rwkwFoRteU5jd0wRyL4
   model: gemini-2.5-flash
