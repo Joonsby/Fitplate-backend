@@ -7,6 +7,7 @@ import com.fitplate.fitplateapi.dto.MealPlanResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
@@ -69,8 +70,11 @@ public class GeminiMealPlanClient {
 
             return objectMapper.readValue(jsonText, MealPlanResponse.class);
 
+        } catch(HttpClientErrorException.TooManyRequests e) {
+            throw new RuntimeException("AI 요청 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.", e);
+        } catch(HttpClientErrorException.Unauthorized e) {
+            throw new RuntimeException( "Gemini API 인증에 실패했습니다.", e);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }

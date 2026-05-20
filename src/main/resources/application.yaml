@@ -1,6 +1,22 @@
 spring:
   application:
     name: fitplate-api
+  datasource:
+    url: jdbc:mysql://localhost:3306/fitplate?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: xhddlf336!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+    show-sql: false
 gemini:
   api-key: AIzaSyA_FN8926usB5N6rwkwFoRteU5jd0wRyL4
   model: gemini-2.5-flash
