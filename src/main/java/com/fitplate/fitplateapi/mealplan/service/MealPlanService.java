@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
+import com.fitplate.fitplateapi.mealplan.dto.SavedMealPlanResponse;
 import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanRequest;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanResponse;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 식단 생성 비즈니스 로직을 담당하는 Service 클래스
@@ -320,5 +323,16 @@ public class MealPlanService {
 
         // 남은 칼로리를 탄수화물로 (1g = 4 kcal)
         return (targetCalories - proteinCalories - fatCalories) / 4;
+    }
+
+    @Transactional
+    public List<SavedMealPlanResponse> getSavedMealPlans(){
+        User user = userRepository.findByTossUserKey(MOCK_USER_KEY)
+                .orElseGet(() -> userRepository.save(new User(MOCK_USER_KEY, "test_user")));
+
+        return mealPlanRepository.findByUserOrderByCreatedAtDesc(user)
+                .stream()
+                .map(SavedMealPlanResponse::from)
+                .toList();
     }
 }

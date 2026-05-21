@@ -2,11 +2,14 @@ package com.fitplate.fitplateapi.mealplan.controller;
 
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanRequest;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanResponse;
+import com.fitplate.fitplateapi.mealplan.dto.SavedMealPlanResponse;
 import com.fitplate.fitplateapi.mealplan.service.MealPlanService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 식단 관련 API의 엔드포인트를 담당하는 컨트롤러
@@ -118,6 +121,13 @@ public class MealPlanController {
         // Step 2: 200 OK 상태코드와 함께 결과 반환
         // ResponseEntity: HTTP 상태 코드 + 응답 본문을 함께 반환
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<SavedMealPlanResponse>> getSavedMealPlans() {
+        List<SavedMealPlanResponse> response = mealPlanService.getSavedMealPlans();
+
+        return ResponseEntity.ok(response);
     }
 }
 
