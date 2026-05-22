@@ -15,7 +15,6 @@ spring:
         jdbc:
           batch_size: 20
     open-in-view: false
-    show-sql: true
 logging:
   level:
     org.hibernate.SQL: debug

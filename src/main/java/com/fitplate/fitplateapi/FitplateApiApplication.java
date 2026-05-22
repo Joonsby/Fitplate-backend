@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Fitplate 애플리케이션의 메인 진입점
  *
- * 📌 Spring Boot 애플리케이션 실행 흐름:
+ * 📌 Spring Boot 애플리케이션 실행 흐름:DB
  * 1. main() 메서드가 실행되면 SpringApplication.run()을 호출합니다
  * 2. 스프링 컨테이너가 초기화되고 모든 빈(Bean)이 등록됩니다
  * 3. 자동 설정(Auto Configuration)이 진행됩니다

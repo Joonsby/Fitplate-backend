@@ -24,11 +24,12 @@ public class MealPlanController {
      * 식단 생성 (POST /api/meal-plan)
      */
     @PostMapping
-    public ResponseEntity<MealPlanResponse> generateMealPlan(@Valid @RequestBody MealPlanRequest request) {
-        MealPlanResponse response = mealPlanService.generateMealPlan(request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    public ResponseEntity<MealPlanGenerateResponse> generateMealPlan(@Valid @RequestBody MealPlanRequest request) {
+        MealPlanGenerateResponse response = mealPlanService.generateMealPlan(request);
+        return ResponseEntity.ok(response);
     }
 
+    // 식단 저장 구현 해야됨
 //    @PostMapping("/save")
 //    public ResponseEntity<Long> saveMealPlan(@Valid @RequestBody SaveMealPlanRequest request) {
 //        mealPlanService.saveMealPlan(request);

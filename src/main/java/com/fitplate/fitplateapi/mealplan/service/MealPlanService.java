@@ -57,35 +57,34 @@ public class MealPlanService {
         this.objectMapper = objectMapper;
     }
 
-    @Transactional(readOnly = true)
-//    public MealPlanGenerateResponse saveMealPlan(SaveMealPlanRequest request) {
-//        int bmr = calculateBmr(request);
-//        int tdee = calculateTdee(bmr);
-//        int targetCalories = calculateTargetCalories(tdee, request.getGoal());
-//        int proteinGram = calculateProteinGram(request);
-//        int fatGram = calculateFatGram(targetCalories);
-//        int carbsGram = calculateCarbsGram(targetCalories, proteinGram, fatGram);
-//
-//        MealPlanResponse aiMealPlanResponse =
-//                geminiMealPlanClient.generateMealPlan(request);
-//
-//        return MealPlanGenerateResponse.builder()
-//                .height(request.getHeight())
-//                .weight(request.getWeight())
-//                .age(request.getAge())
-//                .gender(request.getGender())
-//                .bodyFatRate(request.getBodyFatRate())
-//                .goal(request.getGoal())
-//                .periodDays(request.getPeriodDays())
-//                .targetCalories(targetCalories)
-//                .bmr(bmr)
-//                .tdee(tdee)
-//                .proteinGram(proteinGram)
-//                .carbsGram(carbsGram)
-//                .fatGram(fatGram)
-//                .aiMealPlanResponse(aiMealPlanResponse)
-//                .build();
-//    }
+
+    public MealPlanGenerateResponse generateMealPlan(MealPlanRequest request) {
+        int bmr = calculateBmr(request);
+        int tdee = calculateTdee(bmr);
+        int targetCalories = calculateTargetCalories(tdee, request.getGoal());
+        int proteinGram = calculateProteinGram(request);
+        int fatGram = calculateFatGram(targetCalories);
+        int carbsGram = calculateCarbsGram(targetCalories, proteinGram, fatGram);
+
+        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
+
+        return MealPlanGenerateResponse.builder()
+                .height(request.getHeight())
+                .weight(request.getWeight())
+                .age(request.getAge())
+                .gender(request.getGender())
+                .bodyFatRate(request.getBodyFatRate())
+                .goal(request.getGoal())
+                .periodDays(request.getPeriodDays())
+                .targetCalories(targetCalories)
+                .bmr(bmr)
+                .tdee(tdee)
+                .proteinGram(proteinGram)
+                .carbsGram(carbsGram)
+                .fatGram(fatGram)
+                .aiMealPlanResponse(aiMealPlanResponse)
+                .build();
+    }
 
     /**
      * 사용자 정보로부터 맞춤형 식단을 생성합니다
@@ -93,9 +92,9 @@ public class MealPlanService {
      * @param request 사용자의 신체 정보 및 목표
      * @return AI가 생성한 식단 계획
      */
-    public MealPlanResponse generateMealPlan(MealPlanRequest request) {
-        return geminiMealPlanClient.generateMealPlan(request);
-    }
+//    public MealPlanResponse generateMealPlan(MealPlanRequest request) {
+//        return geminiMealPlanClient.generateMealPlan(request);
+//    }
 
     @Transactional(readOnly = true)
     public List<SavedMealPlanResponse> getSavedMealPlans(String tossUserKey) {
