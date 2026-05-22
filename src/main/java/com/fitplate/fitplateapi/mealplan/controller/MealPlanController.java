@@ -20,25 +20,33 @@ public class MealPlanController {
         this.mealPlanService = mealPlanService;
     }
 
-    @PostMapping  // POST /api/meal-plan
+    /**
+     * 식단 생성 (POST /api/meal-plan)
+     */
+    @PostMapping
     public ResponseEntity<MealPlanResponse> generateMealPlan(@Valid @RequestBody MealPlanRequest request) {
-        // Step 1: Service에서 식단 생성 (비즈니스 로직 실행)
         MealPlanResponse response = mealPlanService.generateMealPlan(request);
-
-        // Step 2: 200 OK 상태코드와 함께 결과 반환
-        // ResponseEntity: HTTP 상태 코드 + 응답 본문을 함께 반환
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-   /*
-   * 저장된 식단 목록 조회 (GET /api/meal-plans)
-   * */
+//    @PostMapping("/save")
+//    public ResponseEntity<Long> saveMealPlan(@Valid @RequestBody SaveMealPlanRequest request) {
+//        mealPlanService.saveMealPlan(request);
+//        return ResponseEntity.status(HttpStatus.OK).build();
+//    }
+
+   /**
+    * 저장된 식단 목록 조회 (GET /api/meal-plans)
+    */
     @GetMapping("/{tossUserKey}")
     public ResponseEntity<List<SavedMealPlanResponse>> getSavedMealPlans(@PathVariable String tossUserKey) {
         List<SavedMealPlanResponse> response = mealPlanService.getSavedMealPlans(tossUserKey);
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 식단 상세 조회 (GET /api/meal-plan/{mealPlanId})
+     */
     @GetMapping("/{mealPlanId}")
     public ResponseEntity<MealPlanDetailResponse> getMealPlan(
             @PathVariable Long mealPlanId
