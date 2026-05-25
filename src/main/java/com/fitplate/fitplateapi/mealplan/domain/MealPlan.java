@@ -3,11 +3,13 @@ package com.fitplate.fitplateapi.mealplan.domain;
 import com.fitplate.fitplateapi.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -70,6 +72,7 @@ public class MealPlan {
     @Column(nullable = false)
     private Integer durationDays;
 
+
     /**
      * 사용자의 키 (센티미터)
      */
@@ -94,6 +97,13 @@ public class MealPlan {
      */
     @Column(nullable = false, length = 10)
     private String gender;
+
+    /**
+     * 사용자의 bmi
+     * 예: 22.86
+     */
+    @Column(nullable = false)
+    private BigDecimal bmi;
 
     /**
      * 계산된 목표 칼로리 (kcal)
@@ -139,6 +149,13 @@ public class MealPlan {
      */
     @Column(nullable = false)
     private Integer fatGram;
+
+    /**
+     * 체지방률
+     * 예: 26.2%
+     */
+    @Column
+    private BigDecimal bodyFatRate;
 
     /**
      * AI가 생성한 식단 데이터 (JSON 문자열)
@@ -215,10 +232,12 @@ public class MealPlan {
      * @param proteinGram 단백질
      * @param carbsGram 탄수화물
      * @param fatGram 지방
+     * @param bodyFatRate 체지방률
      * @param aiResponseJson AI 응답 (JSON)
      * @param startedAt 시작 시간
      * @param expiresAt 종료 시간
      */
+    @Builder
     public MealPlan(
             User user,
             String goal,
@@ -227,12 +246,14 @@ public class MealPlan {
             Integer weightKg,
             Integer age,
             String gender,
+            BigDecimal bmi,
             Integer targetCalories,
             Integer bmr,
             Integer tdee,
             Integer proteinGram,
             Integer carbsGram,
             Integer fatGram,
+            BigDecimal bodyFatRate,
             String aiResponseJson,
             LocalDateTime startedAt,
             LocalDateTime expiresAt
@@ -244,12 +265,14 @@ public class MealPlan {
         this.weightKg = weightKg;
         this.age = age;
         this.gender = gender;
+        this.bmi = bmi;
         this.targetCalories = targetCalories;
         this.bmr = bmr;
         this.tdee = tdee;
         this.proteinGram = proteinGram;
         this.carbsGram = carbsGram;
         this.fatGram = fatGram;
+        this.bodyFatRate = bodyFatRate;
         this.aiResponseJson = aiResponseJson;
         this.startedAt = startedAt;
         this.expiresAt = expiresAt;

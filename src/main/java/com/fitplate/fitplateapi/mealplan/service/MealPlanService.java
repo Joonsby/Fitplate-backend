@@ -1,71 +1,56 @@
 package com.fitplate.fitplateapi.mealplan.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
-import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.mealplan.repository.MealPlanRepository;
+import com.fitplate.fitplateapi.user.domain.User;
+import com.fitplate.fitplateapi.user.domain.UserProfile;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
+import com.fitplate.fitplateapi.user.service.UserProfileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * 식단 생성 비즈니스 로직을 담당하는 Service 클래스
- *
- * 📌 Service 계층의 역할:
- * - 비즈니스 로직 실행 (식단 생성, 데이터 계산 등)
- * - Repository를 통해 DB와 상호작용
- * - 외부 API 호출 (Gemini AI)
- * - 트랜잭션 관리
- *
- * 📌 generateMealPlan() 실행 흐름:
- * 1. 사용자 신체 정보로부터 칼로리 계산
- *    - BMR(기초대사량) 계산
- *    - TDEE(일일 총 소비 칼로리) 계산
- *    - 목표에 따른 목표 칼로리 조정
- * 2. 영양소 분배 계산
- *    - 단백질, 탄수화물, 지방 그램 계산
- * 3. AI 모델(Gemini)에 요청하여 식단 생성
- * 4. 사용자 정보 저장 (없으면 생성)
- * 5. 생성된 식단을 MealPlan 엔티티로 저장
- * 6. 클라이언트에 응답
- */
 @Service  // @Component의 특수한 형태. 비즈니스 로직 담당
 public class MealPlanService {
-
-    private static final String MOCK_USER_KEY = "MOCK_USER_001";
     private final GeminiMealPlanClient geminiMealPlanClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
+    private final UserProfileService userProfileService;
 
     public MealPlanService(
             GeminiMealPlanClient geminiMealPlanClient,
             UserRepository userRepository,
             MealPlanRepository mealPlanRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            UserProfileService userProfileService
     ) {
         this.geminiMealPlanClient = geminiMealPlanClient;
         this.userRepository = userRepository;
         this.mealPlanRepository = mealPlanRepository;
         this.objectMapper = objectMapper;
+        this.userProfileService = userProfileService;
     }
 
-
+    @Transactional
     public MealPlanGenerateResponse generateMealPlan(MealPlanRequest request) {
-        int bmr = calculateBmr(request);
-        int tdee = calculateTdee(bmr);
-        int targetCalories = calculateTargetCalories(tdee, request.getGoal());
-        int proteinGram = calculateProteinGram(request);
-        int fatGram = calculateFatGram(targetCalories);
-        int carbsGram = calculateCarbsGram(targetCalories, proteinGram, fatGram);
+        // 1. 사용자 프로필 저장/수정
+        userProfileService.upsertFromMealPlanRequest(request);
 
+        // 2. 영양 계산
+        NutritionResult nutritionResult = calculateNutrition(
+                request.getHeight(),
+                request.getWeight(),
+                request.getAge(),
+                request.getBodyFatRate(),
+                request.getGender(),
+                request.getGoal()
+        );
         MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
 
         return MealPlanGenerateResponse.builder()
@@ -73,28 +58,70 @@ public class MealPlanService {
                 .weight(request.getWeight())
                 .age(request.getAge())
                 .gender(request.getGender())
-                .bodyFatRate(request.getBodyFatRate())
                 .goal(request.getGoal())
                 .periodDays(request.getPeriodDays())
-                .targetCalories(targetCalories)
-                .bmr(bmr)
-                .tdee(tdee)
-                .proteinGram(proteinGram)
-                .carbsGram(carbsGram)
-                .fatGram(fatGram)
+                .targetCalories(nutritionResult.getTargetCalories())
+                .bmr(nutritionResult.getBmr())
+                .tdee(nutritionResult.getTdee())
+                .proteinGram(nutritionResult.getProteinGram())
+                .carbsGram(nutritionResult.getCarbsGram())
+                .fatGram(nutritionResult.getFatGram())
                 .aiMealPlanResponse(aiMealPlanResponse)
                 .build();
     }
 
-    /**
-     * 사용자 정보로부터 맞춤형 식단을 생성합니다
-     *
-     * @param request 사용자의 신체 정보 및 목표
-     * @return AI가 생성한 식단 계획
-     */
-//    public MealPlanResponse generateMealPlan(MealPlanRequest request) {
-//        return geminiMealPlanClient.generateMealPlan(request);
-//    }
+    @Transactional
+    public void saveMealPlan(SaveMealPlanRequest request) {
+        User user = userRepository.findByTossUserKey(request.getTossUserKey())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + request.getTossUserKey()));
+
+        UserProfile profile = userProfileService.findByTossUserKey(
+                request.getTossUserKey()
+        );
+
+        Double bodyFatRate = profile.getBodyFatRate() == null
+                ? null
+                : profile.getBodyFatRate().doubleValue();
+
+        NutritionResult nutrition = calculateNutrition(
+                profile.getHeightCm(),
+                profile.getWeightKg(),
+                profile.getAge(),
+                bodyFatRate,
+                profile.getGender(),
+                request.getGoal()
+        );
+
+        LocalDateTime now = LocalDateTime.now();
+
+        MealPlan mealPlan = MealPlan.builder()
+                .user(user)
+                .goal(request.getGoal())
+                .durationDays(request.getPeriodDays())
+
+                // 저장 당시 사용자 프로필 스냅샷
+                .heightCm(profile.getHeightCm())
+                .weightKg(profile.getWeightKg())
+                .age(profile.getAge())
+                .gender(profile.getGender())
+                .bmi(profile.getBmi())
+                .bodyFatRate(profile.getBodyFatRate())
+
+                // 저장 당시 계산 결과 스냅샷
+                .targetCalories(nutrition.getTargetCalories())
+                .bmr(nutrition.getBmr())
+                .tdee(nutrition.getTdee())
+                .proteinGram(nutrition.getProteinGram())
+                .carbsGram(nutrition.getCarbsGram())
+                .fatGram(nutrition.getFatGram())
+
+                .aiResponseJson(request.getAiResponseJson().toString())
+                .startedAt(now)
+                .expiresAt(now.plusDays(request.getPeriodDays()))
+                .build();
+
+        mealPlanRepository.save(mealPlan);
+    }
 
     @Transactional(readOnly = true)
     public List<SavedMealPlanResponse> getSavedMealPlans(String tossUserKey) {
@@ -120,21 +147,77 @@ public class MealPlanService {
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
                 .orElseThrow(() -> new IllegalArgumentException("식단을 찾을 수 없습니다: " + mealPlanId));
     }
+    private NutritionResult calculateNutrition(
+            Integer height,
+            Integer weight,
+            Integer age,
+            Double bodyFatRate,
+            String gender,
+            String goal
+    ) {
+        int bmr = calculateBmr(
+                height,
+                weight,
+                age,
+                bodyFatRate,
+                gender
+        );
 
-    private int calculateBmr(MealPlanRequest request) {
-        if ("MALE".equalsIgnoreCase(request.getGender())) {
+        int tdee = calculateTdee(bmr);
+        int targetCalories = calculateTargetCalories(tdee, goal);
+
+        int proteinGram = calculateProteinGram(weight);
+        int fatGram = calculateFatGram(targetCalories);
+        int carbsGram = calculateCarbsGram(
+                targetCalories,
+                proteinGram,
+                fatGram
+        );
+
+        return NutritionResult.builder()
+                .bmr(bmr)
+                .tdee(tdee)
+                .targetCalories(targetCalories)
+                .proteinGram(proteinGram)
+                .fatGram(fatGram)
+                .carbsGram(carbsGram)
+                .build();
+    }
+
+    private int calculateBmr(
+            Integer height,
+            Integer weight,
+            Integer age,
+            Double bodyFatRate,
+            String gender
+    ) {
+
+        // 체지방률이 존재하면 Katch-McArdle 공식 사용
+        if (bodyFatRate != null) {
+
+            // 제지방량(LBM)
+            double leanBodyMass =
+                    weight * (1 - (bodyFatRate / 100.0));
+
             return (int) Math.round(
-                    10 * request.getWeight()
-                            + 6.25 * request.getHeight()
-                            - 5 * request.getAge()
+                    370 + (21.6 * leanBodyMass)
+            );
+        }
+
+        // 체지방률 없으면 기존 공식 fallback
+        if ("MALE".equalsIgnoreCase(gender)) {
+            return (int) Math.round(
+                    10 * weight
+                            + 6.25 * height
+                            - 5 * age
                             + 5
             );
         }
 
         return (int) Math.round(
-                10 * request.getWeight()
-                        + 6.25 * request.getHeight()
-                        - 5 * request.getAge()
+                10 * weight
+                        + 6.25 * height
+                        - 5 * age
                         - 161
         );
     }
@@ -143,7 +226,10 @@ public class MealPlanService {
         return (int) Math.round(bmr * 1.35);
     }
 
-    private int calculateTargetCalories(int tdee, String goal) {
+    private int calculateTargetCalories(
+            int tdee,
+            String goal
+    ) {
         return switch (goal) {
             case "WEIGHT_LOSS" -> tdee - 400;
             case "MUSCLE_GAIN" -> tdee + 300;
@@ -151,12 +237,14 @@ public class MealPlanService {
         };
     }
 
-    private int calculateProteinGram(MealPlanRequest request) {
-        return (int) Math.round(request.getWeight() * 1.6);
+    private int calculateProteinGram(Integer weight) {
+        return (int) Math.round(weight * 1.6);
     }
 
     private int calculateFatGram(int targetCalories) {
-        return (int) Math.round((targetCalories * 0.25) / 9);
+        return (int) Math.round(
+                (targetCalories * 0.25) / 9
+        );
     }
 
     private int calculateCarbsGram(
@@ -167,6 +255,10 @@ public class MealPlanService {
         int proteinCalories = proteinGram * 4;
         int fatCalories = fatGram * 9;
 
-        return (targetCalories - proteinCalories - fatCalories) / 4;
+        return (
+                targetCalories
+                        - proteinCalories
+                        - fatCalories
+        ) / 4;
     }
 }
