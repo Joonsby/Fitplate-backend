@@ -29,17 +29,19 @@ public class MealPlanController {
         return ResponseEntity.ok(response);
     }
 
-    // 식단 저장 구현 해야됨
-//    @PostMapping("/save")
-//    public ResponseEntity<Long> saveMealPlan(@Valid @RequestBody SaveMealPlanRequest request) {
-//        mealPlanService.saveMealPlan(request);
-//        return ResponseEntity.status(HttpStatus.OK).build();
-//    }
+    /**
+     * 식단 저장 (POST /api/meal-plan/save)
+     */
+    @PostMapping("/save")
+    public ResponseEntity<Long> saveMealPlan(@Valid @RequestBody SaveMealPlanRequest request) {
+        mealPlanService.saveMealPlan(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 
    /**
     * 저장된 식단 목록 조회 (GET /api/meal-plans)
     */
-    @GetMapping("/{tossUserKey}")
+    @GetMapping("/users/{tossUserKey}")
     public ResponseEntity<List<SavedMealPlanResponse>> getSavedMealPlans(@PathVariable String tossUserKey) {
         List<SavedMealPlanResponse> response = mealPlanService.getSavedMealPlans(tossUserKey);
         return ResponseEntity.ok(response);
@@ -48,7 +50,7 @@ public class MealPlanController {
     /**
      * 식단 상세 조회 (GET /api/meal-plan/{mealPlanId})
      */
-    @GetMapping("/{mealPlanId}")
+    @GetMapping("/detail/{mealPlanId}")
     public ResponseEntity<MealPlanDetailResponse> getMealPlan(
             @PathVariable Long mealPlanId
     ) {

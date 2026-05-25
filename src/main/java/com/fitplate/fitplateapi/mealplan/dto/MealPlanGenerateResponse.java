@@ -15,7 +15,6 @@ public class MealPlanGenerateResponse {
     private Integer weight;
     private Integer age;
     private String gender;
-    private Double bodyFatRate;
     private String goal;
     private Integer periodDays;
 

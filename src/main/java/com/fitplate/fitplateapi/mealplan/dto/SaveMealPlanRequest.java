@@ -1,20 +1,29 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class SaveMealPlanRequest {
-    private String height;
-    private String weight;
+    @NotNull
+    private String tossUserKey;
+    @NotNull
+    private Integer height;
+    @NotNull
+    private Integer weight;
+    @NotNull
+    private Integer age;
+    @NotNull
     private String gender;
-    private String age;
-    private String bodyFatRate;
+    private Double bodyFatRate;
+    @NotBlank
     private String goal;
-    private String periodDays;
+    @NotNull
+    private Integer periodDays;
+    @NotBlank
+    private String aiResponseJson;
 }
