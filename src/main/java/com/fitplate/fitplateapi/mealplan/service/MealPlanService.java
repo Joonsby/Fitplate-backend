@@ -73,11 +73,11 @@ public class MealPlanService {
     @Transactional
     public void saveMealPlan(SaveMealPlanRequest request) {
         User user = userRepository.findByTossUserKey(request.getTossUserKey())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + request.getTossUserKey()));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "사용자를 찾을 수 없습니다: " + request.getTossUserKey()
+                ));
 
-        UserProfile profile = userProfileService.findByTossUserKey(
-                request.getTossUserKey()
-        );
+        UserProfile profile = userProfileService.findByTossUserKey(request.getTossUserKey());
 
         Double bodyFatRate = profile.getBodyFatRate() == null
                 ? null
@@ -98,24 +98,19 @@ public class MealPlanService {
                 .user(user)
                 .goal(request.getGoal())
                 .durationDays(request.getPeriodDays())
-
-                // 저장 당시 사용자 프로필 스냅샷
                 .heightCm(profile.getHeightCm())
                 .weightKg(profile.getWeightKg())
                 .age(profile.getAge())
                 .gender(profile.getGender())
                 .bmi(profile.getBmi())
                 .bodyFatRate(profile.getBodyFatRate())
-
-                // 저장 당시 계산 결과 스냅샷
                 .targetCalories(nutrition.getTargetCalories())
                 .bmr(nutrition.getBmr())
                 .tdee(nutrition.getTdee())
                 .proteinGram(nutrition.getProteinGram())
                 .carbsGram(nutrition.getCarbsGram())
                 .fatGram(nutrition.getFatGram())
-
-                .aiResponseJson(request.getAiResponseJson().toString())
+                .aiResponseJson(request.getAiMealPlanResponse().toString())
                 .startedAt(now)
                 .expiresAt(now.plusDays(request.getPeriodDays()))
                 .build();

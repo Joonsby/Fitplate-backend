@@ -23,3 +23,9 @@ gemini:
   model: gemini-3.5-flash
 server:
   port: {SERVER_PORT:8080}
+toss:
+  api:
+    base-url: https://apps-in-toss-api.toss.im
+  mtls:
+    cert-path: classpath:certs/fitplate-sandbox-mtls.p12
+    cert-password: ${TOSS_MTLS_CERT_PASSWORD}
