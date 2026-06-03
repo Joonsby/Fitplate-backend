@@ -1,5 +1,6 @@
 package com.fitplate.fitplateapi.global.error;
 
+import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -137,6 +138,56 @@ public class GlobalExceptionHandler {
         // 500 상태코드 + ErrorResponse JSON 반환
         // 참고: ex.printStackTrace() 또는 로깅으로 상세 정보 기록 필요 (운영 환경에서)
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    /**
+     * 리소스가 존재하지 않을 때 발생하는 경우를 처리합니다
+     *
+     * 📌 특징:
+     * - 새로운 통합 Exception 클래스로 모든 "Not Found" 상황 처리
+     * - 첫 번째 파라미터: 찾을 수 없는 리소스의 ID/Key (Object)
+     * - 두 번째 파라미터: 사용자 정의 메시지 (String)
+     *
+     * 📌 발생 상황:
+     * - Any 리소스 조회 시 데이터를 찾을 수 없을 때
+     * - 데이터베이스에서 매칭되는 ID/Key가 없을 때
+     *
+     * 📌 예시:
+     * GET /api/meal-plans/999          → "식단을 찾을 수 없습니다: 999"
+     * GET /api/users/123               → "사용자를 찾을 수 없습니다: 123"
+     * GET /api/users/profile           → "사용자 프로필을 찾을 수 없습니다: user-key"
+     *
+     * 📌 응답:
+     * 404 Not Found
+     * {
+     *   "status": 404,
+     *   "message": "[message]: [resourceId]",
+     *   "timestamp": "2024-05-20T10:30:15",
+     *   "path": "/api/..."
+     * }
+     *
+     * 📌 장점:
+     * - 새로운 리소스 추가 시 Exception 클래스 생성 불필요
+     * - 모든 Not Found 상황을 통일된 방식으로 처리
+     * - 코드 유지보수 용이
+     *
+     * @param ex 발생한 ResourceNotFoundException
+     * @param request 현재 HTTP 요청 정보
+     * @return 에러 응답 (404 Not Found)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex,
+            WebRequest request) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())  // 404
+                .message(ex.getMessage())  // "[message]: [resourceId]"
+                .timestamp(LocalDateTime.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 }
 

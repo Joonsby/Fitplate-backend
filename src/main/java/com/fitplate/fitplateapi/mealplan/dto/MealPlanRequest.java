@@ -38,9 +38,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MealPlanRequest {
-    @NotNull(message = "토스 사용자 키는 필수입니다")
-    private String tossUserKey;
-
     @NotNull(message = "키는 필수입니다")
     @Min(value = 100, message = "키는 100cm 이상이어야 합니다")
     @Max(value = 300, message = "키는 300cm 이하여야 합니다")

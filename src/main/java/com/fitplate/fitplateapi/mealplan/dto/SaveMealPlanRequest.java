@@ -15,10 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SaveMealPlanRequest {
-
-    @NotBlank(message = "토스 사용자 키는 필수입니다")
-    private String tossUserKey;
-
     @NotBlank(message = "목표는 필수입니다")
     private String goal;
 
