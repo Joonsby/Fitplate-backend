@@ -1,4 +1,4 @@
-package com.fitplate.fitplateapi.mealplan.dto;
+package com.fitplate.fitplateapi.nutrition.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

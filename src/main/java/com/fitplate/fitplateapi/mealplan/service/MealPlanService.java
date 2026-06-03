@@ -2,48 +2,45 @@ package com.fitplate.fitplateapi.mealplan.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
+import com.fitplate.fitplateapi.auth.jwt.JwtTokenProvider;
+import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
 import com.fitplate.fitplateapi.mealplan.repository.MealPlanRepository;
+import com.fitplate.fitplateapi.nutrition.dto.NutritionResult;
+import com.fitplate.fitplateapi.nutrition.service.NutritionCalculator;
 import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.user.domain.UserProfile;
+import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service  // @Component의 특수한 형태. 비즈니스 로직 담당
+@RequiredArgsConstructor
 public class MealPlanService {
     private final GeminiMealPlanClient geminiMealPlanClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
     private final UserProfileService userProfileService;
-
-    public MealPlanService(
-            GeminiMealPlanClient geminiMealPlanClient,
-            UserRepository userRepository,
-            MealPlanRepository mealPlanRepository,
-            ObjectMapper objectMapper,
-            UserProfileService userProfileService
-    ) {
-        this.geminiMealPlanClient = geminiMealPlanClient;
-        this.userRepository = userRepository;
-        this.mealPlanRepository = mealPlanRepository;
-        this.objectMapper = objectMapper;
-        this.userProfileService = userProfileService;
-    }
+    private final UserProfileRepository userProfileRepository;
+    private final NutritionCalculator nutritionCalculator;
 
     @Transactional
-    public MealPlanGenerateResponse generateMealPlan(MealPlanRequest request) {
+    public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
         // 1. 사용자 프로필 저장/수정
-        userProfileService.upsertFromMealPlanRequest(request);
+        userProfileService.upsertFromMealPlanRequest(tossUserKey,request);
 
         // 2. 영양 계산
-        NutritionResult nutritionResult = calculateNutrition(
+        NutritionResult nutritionResult = nutritionCalculator.calculate(
                 request.getHeight(),
                 request.getWeight(),
                 request.getAge(),
@@ -51,6 +48,8 @@ public class MealPlanService {
                 request.getGender(),
                 request.getGoal()
         );
+
+        //3. 식단 생성
         MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
 
         return MealPlanGenerateResponse.builder()
@@ -71,19 +70,19 @@ public class MealPlanService {
     }
 
     @Transactional
-    public void saveMealPlan(SaveMealPlanRequest request) {
-        User user = userRepository.findByTossUserKey(request.getTossUserKey())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + request.getTossUserKey()));
+    public long saveMealPlan(String tossUserKey, SaveMealPlanRequest request) {
+        User user = userRepository.findByTossUserKey(tossUserKey)
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
-        UserProfile profile = userProfileService.findByTossUserKey(
-                request.getTossUserKey()
-        );
+        UserProfile profile = userProfileRepository.findByTossUserKey(tossUserKey)
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자 프로필을 찾을 수 없습니다"));
+
 
         Double bodyFatRate = profile.getBodyFatRate() == null
                 ? null
                 : profile.getBodyFatRate().doubleValue();
 
-        NutritionResult nutrition = calculateNutrition(
+        NutritionResult nutrition = nutritionCalculator.calculate(
                 profile.getHeightCm(),
                 profile.getWeightKg(),
                 profile.getAge(),
@@ -98,35 +97,31 @@ public class MealPlanService {
                 .user(user)
                 .goal(request.getGoal())
                 .durationDays(request.getPeriodDays())
-
-                // 저장 당시 사용자 프로필 스냅샷
                 .heightCm(profile.getHeightCm())
                 .weightKg(profile.getWeightKg())
                 .age(profile.getAge())
                 .gender(profile.getGender())
                 .bmi(profile.getBmi())
                 .bodyFatRate(profile.getBodyFatRate())
-
-                // 저장 당시 계산 결과 스냅샷
                 .targetCalories(nutrition.getTargetCalories())
                 .bmr(nutrition.getBmr())
                 .tdee(nutrition.getTdee())
                 .proteinGram(nutrition.getProteinGram())
                 .carbsGram(nutrition.getCarbsGram())
                 .fatGram(nutrition.getFatGram())
-
-                .aiResponseJson(request.getAiResponseJson().toString())
+                .aiResponseJson(request.getAiMealPlanResponse().toString())
                 .startedAt(now)
                 .expiresAt(now.plusDays(request.getPeriodDays()))
                 .build();
 
         mealPlanRepository.save(mealPlan);
+        return mealPlan.getMealPlanId();
     }
 
     @Transactional(readOnly = true)
     public List<SavedMealPlanResponse> getSavedMealPlans(String tossUserKey) {
         User user = userRepository.findByTossUserKey(tossUserKey)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + tossUserKey));
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
         return mealPlanRepository.findByUserOrderByCreatedAtDesc(user)
                 .stream()
@@ -145,120 +140,6 @@ public class MealPlanService {
     public MealPlanDetailResponse findById(Long mealPlanId) {
         return mealPlanRepository.findById(mealPlanId)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
-                .orElseThrow(() -> new IllegalArgumentException("식단을 찾을 수 없습니다: " + mealPlanId));
-    }
-    private NutritionResult calculateNutrition(
-            Integer height,
-            Integer weight,
-            Integer age,
-            Double bodyFatRate,
-            String gender,
-            String goal
-    ) {
-        int bmr = calculateBmr(
-                height,
-                weight,
-                age,
-                bodyFatRate,
-                gender
-        );
-
-        int tdee = calculateTdee(bmr);
-        int targetCalories = calculateTargetCalories(tdee, goal);
-
-        int proteinGram = calculateProteinGram(weight);
-        int fatGram = calculateFatGram(targetCalories);
-        int carbsGram = calculateCarbsGram(
-                targetCalories,
-                proteinGram,
-                fatGram
-        );
-
-        return NutritionResult.builder()
-                .bmr(bmr)
-                .tdee(tdee)
-                .targetCalories(targetCalories)
-                .proteinGram(proteinGram)
-                .fatGram(fatGram)
-                .carbsGram(carbsGram)
-                .build();
-    }
-
-    private int calculateBmr(
-            Integer height,
-            Integer weight,
-            Integer age,
-            Double bodyFatRate,
-            String gender
-    ) {
-
-        // 체지방률이 존재하면 Katch-McArdle 공식 사용
-        if (bodyFatRate != null) {
-
-            // 제지방량(LBM)
-            double leanBodyMass =
-                    weight * (1 - (bodyFatRate / 100.0));
-
-            return (int) Math.round(
-                    370 + (21.6 * leanBodyMass)
-            );
-        }
-
-        // 체지방률 없으면 기존 공식 fallback
-        if ("MALE".equalsIgnoreCase(gender)) {
-            return (int) Math.round(
-                    10 * weight
-                            + 6.25 * height
-                            - 5 * age
-                            + 5
-            );
-        }
-
-        return (int) Math.round(
-                10 * weight
-                        + 6.25 * height
-                        - 5 * age
-                        - 161
-        );
-    }
-
-    private int calculateTdee(int bmr) {
-        return (int) Math.round(bmr * 1.35);
-    }
-
-    private int calculateTargetCalories(
-            int tdee,
-            String goal
-    ) {
-        return switch (goal) {
-            case "WEIGHT_LOSS" -> tdee - 400;
-            case "MUSCLE_GAIN" -> tdee + 300;
-            default -> tdee;
-        };
-    }
-
-    private int calculateProteinGram(Integer weight) {
-        return (int) Math.round(weight * 1.6);
-    }
-
-    private int calculateFatGram(int targetCalories) {
-        return (int) Math.round(
-                (targetCalories * 0.25) / 9
-        );
-    }
-
-    private int calculateCarbsGram(
-            int targetCalories,
-            int proteinGram,
-            int fatGram
-    ) {
-        int proteinCalories = proteinGram * 4;
-        int fatCalories = fatGram * 9;
-
-        return (
-                targetCalories
-                        - proteinCalories
-                        - fatCalories
-        ) / 4;
+                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
     }
 }

@@ -35,3 +35,11 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### key 관련
+src/main/resources/certs/
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks

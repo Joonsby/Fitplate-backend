@@ -2,10 +2,7 @@ package com.fitplate.fitplateapi.mealplan.domain;
 
 import com.fitplate.fitplateapi.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -99,13 +96,6 @@ public class MealPlan {
     private String gender;
 
     /**
-     * 사용자의 bmi
-     * 예: 22.86
-     */
-    @Column(nullable = false)
-    private BigDecimal bmi;
-
-    /**
      * 계산된 목표 칼로리 (kcal)
      * 사용자의 목표에 따라 조정된 칼로리
      * 예: 2000, 2300 등
@@ -149,13 +139,6 @@ public class MealPlan {
      */
     @Column(nullable = false)
     private Integer fatGram;
-
-    /**
-     * 체지방률
-     * 예: 26.2%
-     */
-    @Column
-    private BigDecimal bodyFatRate;
 
     /**
      * AI가 생성한 식단 데이터 (JSON 문자열)
@@ -212,6 +195,20 @@ public class MealPlan {
      */
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    /**
+     * 사용자의 bmi
+     * 예: 22.86
+     */
+    @Column(nullable = false)
+    private BigDecimal bmi;
+
+    /**
+     * 체지방률
+     * 예: 26.2%
+     */
+    @Column
+    private BigDecimal bodyFatRate;
 
     /**
      * MealPlan 생성자
