@@ -88,4 +88,9 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
             User user,
             LocalDateTime now
     );
+
+    boolean existsByUserAndAiResponseHash(
+            User user,
+            String aiResponseHash
+    );
 }

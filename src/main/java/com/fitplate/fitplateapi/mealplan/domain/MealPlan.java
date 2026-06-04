@@ -163,6 +163,9 @@ public class MealPlan {
     @Column(nullable = false, columnDefinition = "JSON")
     private String aiResponseJson;
 
+    @Column(nullable = false, length = 64)
+    private String aiResponseHash;
+
     /**
      * 식단 시작 날짜 및 시간
      * 예: 2024-05-20 10:30:00
@@ -210,6 +213,7 @@ public class MealPlan {
     @Column
     private BigDecimal bodyFatRate;
 
+
     /**
      * MealPlan 생성자
      *
@@ -252,6 +256,7 @@ public class MealPlan {
             Integer fatGram,
             BigDecimal bodyFatRate,
             String aiResponseJson,
+            String aiResponseHash,
             LocalDateTime startedAt,
             LocalDateTime expiresAt
     ) {
@@ -271,6 +276,7 @@ public class MealPlan {
         this.fatGram = fatGram;
         this.bodyFatRate = bodyFatRate;
         this.aiResponseJson = aiResponseJson;
+        this.aiResponseHash = aiResponseHash;
         this.startedAt = startedAt;
         this.expiresAt = expiresAt;
     }

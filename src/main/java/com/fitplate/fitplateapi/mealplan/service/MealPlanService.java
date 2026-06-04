@@ -3,6 +3,7 @@ package com.fitplate.fitplateapi.mealplan.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
 import com.fitplate.fitplateapi.auth.jwt.JwtTokenProvider;
+import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
@@ -20,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -77,6 +81,17 @@ public class MealPlanService {
         UserProfile profile = userProfileRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자 프로필을 찾을 수 없습니다"));
 
+        String aiResponseJson = request.getAiMealPlanResponse().toString();
+        String aiResponseHash = sha256(aiResponseJson);
+
+        boolean alreadySaved = mealPlanRepository.existsByUserAndAiResponseHash(
+                user,
+                aiResponseHash
+        );
+
+        if (alreadySaved) {
+            throw new DuplicateMealPlanException();
+        }
 
         Double bodyFatRate = profile.getBodyFatRate() == null
                 ? null
@@ -109,12 +124,14 @@ public class MealPlanService {
                 .proteinGram(nutrition.getProteinGram())
                 .carbsGram(nutrition.getCarbsGram())
                 .fatGram(nutrition.getFatGram())
-                .aiResponseJson(request.getAiMealPlanResponse().toString())
+                .aiResponseJson(aiResponseJson)
+                .aiResponseHash(aiResponseHash)
                 .startedAt(now)
                 .expiresAt(now.plusDays(request.getPeriodDays()))
                 .build();
 
         mealPlanRepository.save(mealPlan);
+
         return mealPlan.getMealPlanId();
     }
 
@@ -141,5 +158,22 @@ public class MealPlanService {
         return mealPlanRepository.findById(mealPlanId)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
                 .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder hexString = new StringBuilder();
+
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 해시 생성 실패", e);
+        }
     }
 }
