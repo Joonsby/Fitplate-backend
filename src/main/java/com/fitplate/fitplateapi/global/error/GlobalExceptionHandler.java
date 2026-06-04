@@ -1,5 +1,6 @@
 package com.fitplate.fitplateapi.global.error;
 
+import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -188,6 +189,21 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(DuplicateMealPlanException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateMealPlanException(
+            DuplicateMealPlanException ex,
+            WebRequest request
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 }
 
