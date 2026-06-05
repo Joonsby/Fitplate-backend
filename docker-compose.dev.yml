@@ -1,0 +1,28 @@
+services:
+  mysql-dev:
+    image: mysql:8.0
+    container_name: fitplate-mysql-dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: fitplate_dev
+      MYSQL_USER: fitplate_dev_user
+      MYSQL_PASSWORD: fitplate_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+
+  backend-dev:
+    build: .
+    container_name: fitplate-backend-dev
+    restart: always
+    depends_on:
+      - mysql-dev
+    ports:
+      - "8081:8080"
+    env_file:
+      - /home/ubuntu/config/fitplate-dev.env
+    
+volumes:
+  mysql_dev_data:
