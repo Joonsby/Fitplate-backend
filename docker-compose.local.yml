@@ -1,0 +1,17 @@
+services:
+  mysql-local:
+    image: mysql:8.0
+    container_name: fitplate-mysql-local
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: fitplate_local
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_local_data:/var/lib/mysql
+
+volumes:
+  mysql_local_data:
