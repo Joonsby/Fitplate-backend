@@ -1,10 +1,18 @@
 name: Deploy Fitplate Backend
 
 on:
-  push:
-    branches:
-      - dev
-      - main
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "배포할 브랜치를 선택하세요."
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - main
+
+run-name: Deploy ${{ inputs.target_branch }} backend
 
 jobs:
   deploy:
@@ -20,9 +28,10 @@ jobs:
           script: |
             set -e
 
-            echo "Deploy branch: ${{ github.ref_name }}"
+            TARGET_BRANCH="${{ inputs.target_branch }}"
+            echo "Deploy branch: ${TARGET_BRANCH}"
 
-            if [ "${{ github.ref_name }}" = "dev" ]; then
+            if [ "${TARGET_BRANCH}" = "dev" ]; then
               cd /home/ubuntu/apps/Fitplate-backend-dev
               git fetch origin dev
               git checkout dev
@@ -33,7 +42,7 @@ jobs:
               sudo systemctl status fitplate-dev --no-pager
             fi
 
-            if [ "${{ github.ref_name }}" = "main" ]; then
+            if [ "${TARGET_BRANCH}" = "main" ]; then
               cd /home/ubuntu/apps/Fitplate-backend-prod
               git fetch origin main
               git checkout main
