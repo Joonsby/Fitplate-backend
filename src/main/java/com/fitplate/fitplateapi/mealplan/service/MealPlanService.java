@@ -16,6 +16,7 @@ import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service  // @Component의 특수한 형태. 비즈니스 로직 담당
 @RequiredArgsConstructor
 public class MealPlanService {
@@ -75,6 +77,7 @@ public class MealPlanService {
 
     @Transactional
     public long saveMealPlan(String tossUserKey, SaveMealPlanRequest request) {
+        log.info("[saveMealPlan] tossUserKey={}, request={}", tossUserKey, request);
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
@@ -144,6 +147,20 @@ public class MealPlanService {
                 .stream()
                 .map(SavedMealPlanResponse::from)
                 .toList();
+    }
+
+    public void deleteMealPlan(String tossUserKey, Long mealPlanId) {
+        User user = userRepository.findByTossUserKey(tossUserKey)
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
+
+        MealPlan mealPlan = mealPlanRepository.findById(mealPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
+
+        if (!mealPlan.getUser().equals(user)) {
+            throw new IllegalArgumentException("해당 식단에 대한 삭제 권한이 없습니다");
+        }
+
+        mealPlanRepository.delete(mealPlan);
     }
 
     /**

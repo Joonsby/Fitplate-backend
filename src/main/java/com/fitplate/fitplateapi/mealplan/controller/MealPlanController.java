@@ -51,7 +51,7 @@ public class MealPlanController {
    /**
     * 저장된 식단 목록 조회 (GET /api/meal-plan/users/{tossUserKey})
     */
-    @GetMapping("/users")
+    @GetMapping
     public ResponseEntity<List<SavedMealPlanResponse>> getSavedMealPlans(
             @RequestHeader("Authorization") String authorization
     ) {
@@ -72,6 +72,20 @@ public class MealPlanController {
         String token = jwtTokenProvider.resolveToken(authorization);
         return jwtTokenProvider.getTossUserKey(token);
     }
+
+    /**
+     * 식단 삭제 (DELETE /api/meal-plan/{mealPlanId})
+     */
+    @DeleteMapping("/{mealPlanId}")
+    public ResponseEntity<Void> deleteMealPlan(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long mealPlanId
+    ) {
+        String tossUserKey = extractTossUserKey(authorization);
+        mealPlanService.deleteMealPlan(tossUserKey, mealPlanId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
 
 
