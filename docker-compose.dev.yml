@@ -4,7 +4,7 @@ services:
     container_name: fitplate-mysql-dev
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: fitplate_dev
       MYSQL_USER: fitplate_dev_user
       MYSQL_PASSWORD: fitplate_dev
@@ -12,6 +12,11 @@ services:
       - "3307:3306"
     volumes:
       - mysql_dev_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "-p${DB_PASSWORD}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend-dev:
     build: .
