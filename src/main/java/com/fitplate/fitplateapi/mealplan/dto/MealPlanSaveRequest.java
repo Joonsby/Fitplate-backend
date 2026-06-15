@@ -7,6 +7,6 @@ public class MealPlanSaveRequest {
     private String gender;
     private Double bodyFatRate;
     private String goal;
-    private Integer periodDays;
-    private MealPlanResponse aiMealPlanResponse;
+    private Integer durationDays;
+    private MealPlanResponse aiResponse;
 }

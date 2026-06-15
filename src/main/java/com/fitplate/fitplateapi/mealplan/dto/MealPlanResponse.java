@@ -47,7 +47,7 @@ public class MealPlanResponse {
      * - 각 끼니는 MealResponse (음식명, 칼로리, 영양소)
      *
      * 📌 예시:
-     * periodDays=7이면:
+     * durationDays=7이면:
      * days[0] = 1일차 식단 (아침, 점심, 저녁)
      * days[1] = 2일차 식단 (아침, 점심, 저녁)
      * ...

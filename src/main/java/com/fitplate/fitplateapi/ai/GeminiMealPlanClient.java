@@ -217,7 +217,7 @@ public class GeminiMealPlanClient {
      *    - 아침, 점심, 저녁 포함
      *    - 각 끼니마다 영양 정보 포함
      *    - JSON만 반환 (설명, 마크다운 불허)
-     * 4. 사용자 정보: height, weight, gender, age, goal, periodDays
+     * 4. 사용자 정보: height, weight, gender, age, goal, durationDays
      *
      * 📌 예시 프롬프트:
      * 너는 전문 식단 추천 API다.
@@ -239,7 +239,7 @@ public class GeminiMealPlanClient {
      * age=30
      * bodyFatRate=20.5
      * goal=MUSCLE_GAIN
-     * periodDays=7
+     * durationDays=7
      *
      * @param request 사용자 정보
      * @return 생성된 프롬프트 문자열
@@ -265,7 +265,7 @@ public class GeminiMealPlanClient {
                 age=%s
                 bodyFatRate=%s
                 goal=%s
-                periodDays=%s
+                durationDays=%s
                 """.formatted(
                 request.getHeight(),
                 request.getWeight(),
@@ -273,7 +273,7 @@ public class GeminiMealPlanClient {
                 request.getAge(),
                 request.getBodyFatRate(),
                 request.getGoal(),
-                request.getPeriodDays()
+                request.getDurationDays()
         );
     }
 

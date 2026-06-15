@@ -14,7 +14,7 @@ package com.fitplate.fitplateapi.exception;
  * - 코드 유지보수 용이
  *
  * 📌 사용 예시:
- * throw new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다");
+ * throw new ResourceNotFoundException(id, "식단을 찾을 수 없습니다");
  * throw new ResourceNotFoundException(userId, "사용자를 찾을 수 없습니다");
  * throw new ResourceNotFoundException(userKey, "사용자 프로필을 찾을 수 없습니다");
  *

@@ -56,7 +56,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
+        MealPlanResponse aiResponse = geminiMealPlanClient.generateMealPlan(request);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
@@ -64,14 +64,14 @@ public class MealPlanService {
                 .age(request.getAge())
                 .gender(request.getGender())
                 .goal(request.getGoal())
-                .periodDays(request.getPeriodDays())
+                .durationDays(request.getDurationDays())
                 .targetCalories(nutritionResult.getTargetCalories())
                 .bmr(nutritionResult.getBmr())
                 .tdee(nutritionResult.getTdee())
                 .proteinGram(nutritionResult.getProteinGram())
                 .carbsGram(nutritionResult.getCarbsGram())
                 .fatGram(nutritionResult.getFatGram())
-                .aiMealPlanResponse(aiMealPlanResponse)
+                .aiResponse(aiResponse)
                 .build();
     }
 
@@ -84,7 +84,7 @@ public class MealPlanService {
         UserProfile profile = userProfileRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자 프로필을 찾을 수 없습니다"));
 
-        String aiResponseJson = request.getAiMealPlanResponse().toString();
+        String aiResponseJson = request.getAiResponse().toString();
         String aiResponseHash = sha256(aiResponseJson);
 
         boolean alreadySaved = mealPlanRepository.existsByUserAndAiResponseHash(
@@ -114,7 +114,7 @@ public class MealPlanService {
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
-                .durationDays(request.getPeriodDays())
+                .durationDays(request.getDurationDays())
                 .heightCm(profile.getHeightCm())
                 .weightKg(profile.getWeightKg())
                 .age(profile.getAge())
@@ -130,12 +130,12 @@ public class MealPlanService {
                 .aiResponseJson(aiResponseJson)
                 .aiResponseHash(aiResponseHash)
                 .startedAt(now)
-                .expiresAt(now.plusDays(request.getPeriodDays()))
+                .expiresAt(now.plusDays(request.getDurationDays()))
                 .build();
 
         mealPlanRepository.save(mealPlan);
 
-        return mealPlan.getMealPlanId();
+        return mealPlan.getId();
     }
 
     @Transactional(readOnly = true)
@@ -149,12 +149,12 @@ public class MealPlanService {
                 .toList();
     }
 
-    public void deleteMealPlan(String tossUserKey, Long mealPlanId) {
+    public void deleteMealPlan(String tossUserKey, Long id) {
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
-        MealPlan mealPlan = mealPlanRepository.findById(mealPlanId)
-                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
+        MealPlan mealPlan = mealPlanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id, "식단을 찾을 수 없습니다"));
 
         if (!mealPlan.getUser().equals(user)) {
             throw new IllegalArgumentException("해당 식단에 대한 삭제 권한이 없습니다");
@@ -166,15 +166,15 @@ public class MealPlanService {
     /**
      * 특정 ID의 식단 상세 정보를 조회합니다
      *
-     * @param mealPlanId 조회할 식단의 ID
+     * @param id 조회할 식단의 ID
      * @return 식단 상세 정보 (저장된 AI 응답 포함)
      * @throws IllegalArgumentException 식단을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    public MealPlanDetailResponse findById(Long mealPlanId) {
-        return mealPlanRepository.findById(mealPlanId)
+    public MealPlanDetailResponse findById(Long id) {
+        return mealPlanRepository.findById(id)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
-                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
+                .orElseThrow(() -> new ResourceNotFoundException(id, "식단을 찾을 수 없습니다"));
     }
 
     private String sha256(String value) {
