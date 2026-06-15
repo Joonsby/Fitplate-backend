@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
      *   "age": 30,            // OK
      *   "gender": "",         // 검증 실패: 빈 문자열
      *   "goal": "MUSCLE_GAIN",
-     *   "periodDays": 7
+     *   "durationDays": 7
      * }
      *
      * 📌 응답:

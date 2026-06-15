@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class SavedMealPlanResponse {
 
-    private Long mealPlanId;
+    private Long id;
     private String goal;
     private Integer durationDays;
 
@@ -35,7 +35,7 @@ public class SavedMealPlanResponse {
 
     public static SavedMealPlanResponse from(MealPlan mealPlan) {
         return SavedMealPlanResponse.builder()
-                .mealPlanId(mealPlan.getMealPlanId())
+                .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
                 .durationDays(mealPlan.getDurationDays())
                 .heightCm(mealPlan.getHeightCm())

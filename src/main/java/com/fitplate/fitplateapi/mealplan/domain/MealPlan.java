@@ -41,7 +41,7 @@ public class MealPlan {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long mealPlanId;
+    private Long id;
 
     /**
      * 이 식단이 속한 사용자
