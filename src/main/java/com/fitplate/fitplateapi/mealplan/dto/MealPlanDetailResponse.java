@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MealPlanDetailResponse {
 
-    private Long mealPlanId;
+    private Long id;
 
     private String goal;
     private Integer durationDays;
@@ -33,7 +33,7 @@ public class MealPlanDetailResponse {
     private Integer carbsGram;
     private Integer fatGram;
 
-    private MealPlanResponse aiMealPlanResponse;
+    private MealPlanResponse aiResponse;
 
     private LocalDateTime startedAt;
     private LocalDateTime expiresAt;
@@ -45,7 +45,7 @@ public class MealPlanDetailResponse {
             ObjectMapper objectMapper
     ) {
         return MealPlanDetailResponse.builder()
-                .mealPlanId(mealPlan.getMealPlanId())
+                .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
                 .durationDays(mealPlan.getDurationDays())
                 .heightCm(mealPlan.getHeightCm())
@@ -58,7 +58,7 @@ public class MealPlanDetailResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiMealPlanResponse(toMealPlanResponse(
+                .aiResponse(toMealPlanResponse(
                         mealPlan.getAiResponseJson(),
                         objectMapper
                 ))
