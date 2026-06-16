@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
-@Service  // @Component의 특수한 형태. 비즈니스 로직 담당
+@Service
 @RequiredArgsConstructor
 public class MealPlanService {
     private final GeminiMealPlanClient geminiMealPlanClient;
@@ -163,13 +163,7 @@ public class MealPlanService {
         mealPlanRepository.delete(mealPlan);
     }
 
-    /**
-     * 특정 ID의 식단 상세 정보를 조회합니다
-     *
-     * @param mealPlanId 조회할 식단의 ID
-     * @return 식단 상세 정보 (저장된 AI 응답 포함)
-     * @throws IllegalArgumentException 식단을 찾을 수 없는 경우
-     */
+    /** 식단 상세 조회 (저장된 AI 응답 포함). */
     @Transactional(readOnly = true)
     public MealPlanDetailResponse findById(Long mealPlanId) {
         return mealPlanRepository.findById(mealPlanId)

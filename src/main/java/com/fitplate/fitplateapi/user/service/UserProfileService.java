@@ -61,8 +61,7 @@ public class UserProfileService {
     }
 
     private BigDecimal toBigDecimal(Double value) {
-        // Double 값을 소수점 2자리 BigDecimal로 변환합니다.
-        // 값이 null이면 null을 반환합니다.
+        // Double을 소수점 2자리 BigDecimal로 변환 (null이면 null 반환).
         if (value == null) {
             return null;
         }
