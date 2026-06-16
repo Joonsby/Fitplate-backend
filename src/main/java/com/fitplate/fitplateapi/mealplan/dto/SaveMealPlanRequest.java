@@ -21,8 +21,8 @@ public class SaveMealPlanRequest {
     @NotNull(message = "기간은 필수입니다")
     @Min(value = 1, message = "기간은 1일 이상이어야 합니다")
     @Max(value = 365, message = "기간은 365일 이하여야 합니다")
-    private Integer periodDays;
+    private Integer durationDays;
 
     @NotNull(message = "AI 식단 응답은 필수입니다")
-    private JsonNode aiMealPlanResponse;
+    private JsonNode aiResponse;
 }

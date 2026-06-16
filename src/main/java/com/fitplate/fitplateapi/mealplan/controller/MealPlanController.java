@@ -44,8 +44,8 @@ public class MealPlanController {
             @Valid @RequestBody SaveMealPlanRequest request
     ) {
         String tossUserKey = extractTossUserKey(authorization);
-        Long mealPlanId = mealPlanService.saveMealPlan(tossUserKey,request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mealPlanId);
+        Long id = mealPlanService.saveMealPlan(tossUserKey,request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
    /**
@@ -61,11 +61,11 @@ public class MealPlanController {
     }
 
     /**
-     * 식단 상세 조회 (GET /api/meal-plan/detail/{mealPlanId})
+     * 식단 상세 조회 (GET /api/meal-plan/detail/{id})
      */
-    @GetMapping("/detail/{mealPlanId}")
-    public ResponseEntity<MealPlanDetailResponse> getMealPlan(@PathVariable Long mealPlanId) {
-        return ResponseEntity.ok(mealPlanService.findById(mealPlanId));
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<MealPlanDetailResponse> getMealPlan(@PathVariable Long id) {
+        return ResponseEntity.ok(mealPlanService.findById(id));
     }
 
     private String extractTossUserKey(String authorization) {
@@ -74,15 +74,15 @@ public class MealPlanController {
     }
 
     /**
-     * 식단 삭제 (DELETE /api/meal-plan/{mealPlanId})
+     * 식단 삭제 (DELETE /api/meal-plan/{id})
      */
-    @DeleteMapping("/{mealPlanId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMealPlan(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable Long mealPlanId
+            @PathVariable Long id
     ) {
         String tossUserKey = extractTossUserKey(authorization);
-        mealPlanService.deleteMealPlan(tossUserKey, mealPlanId);
+        mealPlanService.deleteMealPlan(tossUserKey, id);
         return ResponseEntity.noContent().build();
     }
 

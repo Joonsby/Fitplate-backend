@@ -21,7 +21,7 @@ public class MealPlan {
     /** 식단 ID (PK, 자동 증가). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long mealPlanId;
+    private Long id;
 
     /** 이 식단이 속한 사용자 (다대일). */
     @ManyToOne(fetch = FetchType.LAZY)
