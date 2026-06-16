@@ -56,7 +56,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
+        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request, nutritionResult);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
@@ -64,7 +64,7 @@ public class MealPlanService {
                 .age(request.getAge())
                 .gender(request.getGender())
                 .goal(request.getGoal())
-                .periodDays(request.getPeriodDays())
+                .durationDays(request.getDurationDays())
                 .targetCalories(nutritionResult.getTargetCalories())
                 .bmr(nutritionResult.getBmr())
                 .tdee(nutritionResult.getTdee())
@@ -101,8 +101,8 @@ public class MealPlanService {
                 : profile.getBodyFatRate().doubleValue();
 
         NutritionResult nutrition = nutritionCalculator.calculate(
-                profile.getHeightCm(),
-                profile.getWeightKg(),
+                profile.getHeight(),
+                profile.getWeight(),
                 profile.getAge(),
                 bodyFatRate,
                 profile.getGender(),
@@ -114,9 +114,9 @@ public class MealPlanService {
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
-                .durationDays(request.getPeriodDays())
-                .heightCm(profile.getHeightCm())
-                .weightKg(profile.getWeightKg())
+                .durationDays(request.getDurationDays())
+                .height(profile.getHeight())
+                .weight(profile.getWeight())
                 .age(profile.getAge())
                 .gender(profile.getGender())
                 .bmi(profile.getBmi())
@@ -130,12 +130,12 @@ public class MealPlanService {
                 .aiResponseJson(aiResponseJson)
                 .aiResponseHash(aiResponseHash)
                 .startedAt(now)
-                .expiresAt(now.plusDays(request.getPeriodDays()))
+                .expiresAt(now.plusDays(request.getDurationDays()))
                 .build();
 
         mealPlanRepository.save(mealPlan);
 
-        return mealPlan.getMealPlanId();
+        return mealPlan.getId();
     }
 
     @Transactional(readOnly = true)
@@ -145,7 +145,7 @@ public class MealPlanService {
 
         return mealPlanRepository.findByUserOrderByCreatedAtDesc(user)
                 .stream()
-                .map(SavedMealPlanResponse::from)
+                .map(mealPlan -> SavedMealPlanResponse.from(mealPlan, objectMapper))
                 .toList();
     }
 

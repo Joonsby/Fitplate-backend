@@ -21,8 +21,8 @@ public class MealPlanDetailResponse {
     private String goal;
     private Integer durationDays;
 
-    private Integer heightCm;
-    private Integer weightKg;
+    private Integer height;
+    private Integer weight;
     private Integer age;
     private String gender;
 
@@ -33,7 +33,7 @@ public class MealPlanDetailResponse {
     private Integer carbsGram;
     private Integer fatGram;
 
-    private MealPlanResponse aiResponse;
+    private MealPlanResponse aiMealPlanResponse;
 
     private LocalDateTime startedAt;
     private LocalDateTime expiresAt;
@@ -48,8 +48,8 @@ public class MealPlanDetailResponse {
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
                 .durationDays(mealPlan.getDurationDays())
-                .heightCm(mealPlan.getHeightCm())
-                .weightKg(mealPlan.getWeightKg())
+                .height(mealPlan.getHeight())
+                .weight(mealPlan.getWeight())
                 .age(mealPlan.getAge())
                 .gender(mealPlan.getGender())
                 .targetCalories(mealPlan.getTargetCalories())
@@ -58,7 +58,7 @@ public class MealPlanDetailResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiResponse(toMealPlanResponse(
+                .aiMealPlanResponse(toMealPlanResponse(
                         mealPlan.getAiResponseJson(),
                         objectMapper
                 ))
@@ -69,7 +69,7 @@ public class MealPlanDetailResponse {
                 .build();
     }
 
-    private static MealPlanResponse toMealPlanResponse(
+    public static MealPlanResponse toMealPlanResponse(
             String aiResponseJson,
             ObjectMapper objectMapper
     ) {

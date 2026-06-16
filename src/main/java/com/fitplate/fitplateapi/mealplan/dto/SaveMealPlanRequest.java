@@ -24,5 +24,5 @@ public class SaveMealPlanRequest {
     private Integer durationDays;
 
     @NotNull(message = "AI 식단 응답은 필수입니다")
-    private JsonNode aiResponse;
+    private JsonNode aiMealPlanResponse;
 }

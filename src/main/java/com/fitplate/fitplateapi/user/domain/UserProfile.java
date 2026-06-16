@@ -28,11 +28,11 @@ public class UserProfile {
     @Column(name = "toss_user_key", nullable = false, length = 100)
     private String tossUserKey;
 
-    @Column(name = "height_cm", nullable = false)
-    private Integer heightCm;
+    @Column(name = "height", nullable = false)
+    private Integer height;
 
-    @Column(name = "weight_kg", nullable = false)
-    private Integer weightKg;
+    @Column(name = "weight", nullable = false)
+    private Integer weight;
 
     @Column(name = "age", nullable = false)
     private Integer age;
@@ -55,16 +55,16 @@ public class UserProfile {
     @Builder
     public UserProfile(
             String tossUserKey,
-            Integer heightCm,
-            Integer weightKg,
+            Integer height,
+            Integer weight,
             Integer age,
             String gender,
             BigDecimal bmi,
             BigDecimal bodyFatRate
     ) {
         this.tossUserKey = tossUserKey;
-        this.heightCm = heightCm;
-        this.weightKg = weightKg;
+        this.height = height;
+        this.weight = weight;
         this.age = age;
         this.gender = gender;
         this.bmi = bmi;
@@ -72,15 +72,15 @@ public class UserProfile {
     }
 
     public void update(
-            Integer heightCm,
-            Integer weightKg,
+            Integer height,
+            Integer weight,
             Integer age,
             String gender,
             BigDecimal bmi,
             BigDecimal bodyFatRate
     ) {
-        this.heightCm = heightCm;
-        this.weightKg = weightKg;
+        this.height = height;
+        this.weight = weight;
         this.age = age;
         this.gender = gender;
         this.bmi = bmi;

@@ -1,10 +1,13 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+
+import static com.fitplate.fitplateapi.mealplan.dto.MealPlanDetailResponse.toMealPlanResponse;
 
 @Getter
 @Builder
@@ -14,8 +17,8 @@ public class SavedMealPlanResponse {
     private String goal;
     private Integer durationDays;
 
-    private Integer heightCm;
-    private Integer weightKg;
+    private Integer height;
+    private Integer weight;
     private Integer age;
     private String gender;
 
@@ -26,20 +29,20 @@ public class SavedMealPlanResponse {
     private Integer carbsGram;
     private Integer fatGram;
 
-    private String aiResponseJson;
+    private MealPlanResponse aiMealPlanResponse;
 
     private LocalDateTime startedAt;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static SavedMealPlanResponse from(MealPlan mealPlan) {
+    public static SavedMealPlanResponse from(MealPlan mealPlan, ObjectMapper objectMapper) {
         return SavedMealPlanResponse.builder()
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
                 .durationDays(mealPlan.getDurationDays())
-                .heightCm(mealPlan.getHeightCm())
-                .weightKg(mealPlan.getWeightKg())
+                .height(mealPlan.getHeight())
+                .weight(mealPlan.getWeight())
                 .age(mealPlan.getAge())
                 .gender(mealPlan.getGender())
                 .targetCalories(mealPlan.getTargetCalories())
@@ -48,7 +51,7 @@ public class SavedMealPlanResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiResponseJson(mealPlan.getAiResponseJson())
+                .aiMealPlanResponse(toMealPlanResponse(mealPlan.getAiResponseJson(), objectMapper))
                 .startedAt(mealPlan.getStartedAt())
                 .expiresAt(mealPlan.getExpiresAt())
                 .createdAt(mealPlan.getCreatedAt())
