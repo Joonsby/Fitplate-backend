@@ -21,6 +21,7 @@ public class MealPlan {
     /** 식단 ID (PK, 자동 증가). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "meal_plan_id")
     private Long id;
 
     /** 이 식단이 속한 사용자 (다대일). */
@@ -39,11 +40,11 @@ public class MealPlan {
 
     /** 사용자의 키 (cm). */
     @Column(nullable = false)
-    private Integer heightCm;
+    private Integer height;
 
     /** 사용자의 체중 (kg). */
     @Column(nullable = false)
-    private Integer weightKg;
+    private Integer weight;
 
     /** 사용자의 나이 (세). */
     @Column(nullable = false)
@@ -116,8 +117,8 @@ public class MealPlan {
             User user,
             String goal,
             Integer durationDays,
-            Integer heightCm,
-            Integer weightKg,
+            Integer height,
+            Integer weight,
             Integer age,
             String gender,
             BigDecimal bmi,
@@ -136,8 +137,8 @@ public class MealPlan {
         this.user = user;
         this.goal = goal;
         this.durationDays = durationDays;
-        this.heightCm = heightCm;
-        this.weightKg = weightKg;
+        this.height = height;
+        this.weight = weight;
         this.age = age;
         this.gender = gender;
         this.bmi = bmi;

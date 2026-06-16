@@ -25,5 +25,5 @@ public class MealPlanGenerateResponse {
     private Integer carbsGram;
     private Integer fatGram;
 
-    private MealPlanResponse aiResponse;
+    private MealPlanResponse aiMealPlanResponse;
 }

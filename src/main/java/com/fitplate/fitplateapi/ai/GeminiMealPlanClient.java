@@ -156,7 +156,7 @@ public class GeminiMealPlanClient {
                 request.getAge(),
                 request.getBodyFatRate(),
                 request.getGoal(),
-                request.getPeriodDays()
+                request.getDurationDays()
         );
     }
 

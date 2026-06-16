@@ -49,8 +49,8 @@ public class UserProfileService {
 
         UserProfile profile = UserProfile.builder()
                 .tossUserKey(tossUserKey)
-                .heightCm(request.getHeight())
-                .weightKg(request.getWeight())
+                .height(request.getHeight())
+                .weight(request.getWeight())
                 .age(request.getAge())
                 .gender(request.getGender())
                 .bmi(bmi)
