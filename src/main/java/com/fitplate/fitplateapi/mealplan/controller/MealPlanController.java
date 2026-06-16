@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 
-@RestController  // @Controller + @ResponseBody 합친 것. JSON으로 응답함
-@RequestMapping("/api/meal-plan")  // 이 컨트롤러의 기본 URL 경로
-@RequiredArgsConstructor  // final 필드에 대한 생성자 자동 생성 (의존성 주입)
+@RestController
+@RequestMapping("/api/meal-plan")
+@RequiredArgsConstructor
 @Slf4j
 public class MealPlanController {
 

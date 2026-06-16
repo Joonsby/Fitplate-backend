@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
-@Service  // @Component의 특수한 형태. 비즈니스 로직 담당
+@Service
 @RequiredArgsConstructor
 public class MealPlanService {
     private final GeminiMealPlanClient geminiMealPlanClient;
@@ -56,7 +56,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiResponse = geminiMealPlanClient.generateMealPlan(request);
+        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
@@ -64,14 +64,14 @@ public class MealPlanService {
                 .age(request.getAge())
                 .gender(request.getGender())
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
+                .periodDays(request.getPeriodDays())
                 .targetCalories(nutritionResult.getTargetCalories())
                 .bmr(nutritionResult.getBmr())
                 .tdee(nutritionResult.getTdee())
                 .proteinGram(nutritionResult.getProteinGram())
                 .carbsGram(nutritionResult.getCarbsGram())
                 .fatGram(nutritionResult.getFatGram())
-                .aiResponse(aiResponse)
+                .aiMealPlanResponse(aiMealPlanResponse)
                 .build();
     }
 
@@ -84,7 +84,7 @@ public class MealPlanService {
         UserProfile profile = userProfileRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자 프로필을 찾을 수 없습니다"));
 
-        String aiResponseJson = request.getAiResponse().toString();
+        String aiResponseJson = request.getAiMealPlanResponse().toString();
         String aiResponseHash = sha256(aiResponseJson);
 
         boolean alreadySaved = mealPlanRepository.existsByUserAndAiResponseHash(
@@ -114,7 +114,7 @@ public class MealPlanService {
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
+                .durationDays(request.getPeriodDays())
                 .heightCm(profile.getHeightCm())
                 .weightKg(profile.getWeightKg())
                 .age(profile.getAge())
@@ -130,12 +130,12 @@ public class MealPlanService {
                 .aiResponseJson(aiResponseJson)
                 .aiResponseHash(aiResponseHash)
                 .startedAt(now)
-                .expiresAt(now.plusDays(request.getDurationDays()))
+                .expiresAt(now.plusDays(request.getPeriodDays()))
                 .build();
 
         mealPlanRepository.save(mealPlan);
 
-        return mealPlan.getId();
+        return mealPlan.getMealPlanId();
     }
 
     @Transactional(readOnly = true)
@@ -149,12 +149,12 @@ public class MealPlanService {
                 .toList();
     }
 
-    public void deleteMealPlan(String tossUserKey, Long id) {
+    public void deleteMealPlan(String tossUserKey, Long mealPlanId) {
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
-        MealPlan mealPlan = mealPlanRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(id, "식단을 찾을 수 없습니다"));
+        MealPlan mealPlan = mealPlanRepository.findById(mealPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
 
         if (!mealPlan.getUser().equals(user)) {
             throw new IllegalArgumentException("해당 식단에 대한 삭제 권한이 없습니다");
@@ -163,18 +163,12 @@ public class MealPlanService {
         mealPlanRepository.delete(mealPlan);
     }
 
-    /**
-     * 특정 ID의 식단 상세 정보를 조회합니다
-     *
-     * @param id 조회할 식단의 ID
-     * @return 식단 상세 정보 (저장된 AI 응답 포함)
-     * @throws IllegalArgumentException 식단을 찾을 수 없는 경우
-     */
+    /** 식단 상세 조회 (저장된 AI 응답 포함). */
     @Transactional(readOnly = true)
-    public MealPlanDetailResponse findById(Long id) {
-        return mealPlanRepository.findById(id)
+    public MealPlanDetailResponse findById(Long mealPlanId) {
+        return mealPlanRepository.findById(mealPlanId)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
-                .orElseThrow(() -> new ResourceNotFoundException(id, "식단을 찾을 수 없습니다"));
+                .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
     }
 
     private String sha256(String value) {
