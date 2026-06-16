@@ -33,7 +33,7 @@ public class MealPlanDetailResponse {
     private Integer carbsGram;
     private Integer fatGram;
 
-    private MealPlanResponse aiResponse;
+    private MealPlanResponse aiMealPlanResponse;
 
     private LocalDateTime startedAt;
     private LocalDateTime expiresAt;
@@ -58,7 +58,7 @@ public class MealPlanDetailResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiResponse(toMealPlanResponse(
+                .aiMealPlanResponse(toMealPlanResponse(
                         mealPlan.getAiResponseJson(),
                         objectMapper
                 ))

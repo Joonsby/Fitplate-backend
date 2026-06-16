@@ -56,7 +56,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request);
+        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request, nutritionResult);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
