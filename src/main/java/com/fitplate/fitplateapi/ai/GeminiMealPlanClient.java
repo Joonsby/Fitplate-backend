@@ -144,10 +144,10 @@ public class GeminiMealPlanClient {
             - 각 음식은 name, amount, calories, protein, carbohydrate, fat, shoppingKeyword를 포함해라.
             - shoppingKeyword는 쿠팡 같은 쇼핑몰에서 검색하기 좋은 짧은 키워드로 작성해라.
             - 각 끼니의 총 칼로리는 목표 칼로리에 맞게 구성해라.
-            - 하루 총 칼로리는 targetCalories의 ±10%% 이내로 맞춰라.
-            - 하루 총 단백질은 proteinGram의 ±10%% 이내로 맞춰라.
-            - 하루 총 탄수화물은 carbsGram의 ±10%% 이내로 맞춰라.
-            - 하루 총 지방은 fatGram의 ±10%% 이내로 맞춰라.
+            - 하루 총 칼로리는 targetCalories의 ±10퍼센트 이내로 맞춰라.
+            - 하루 총 단백질은 proteinGram의 ±10퍼센트 이내로 맞춰라.
+            - 하루 총 탄수화물은 carbsGram의 ±10퍼센트 이내로 맞춰라.
+            - 하루 총 지방은 fatGram의 ±10퍼센트 이내로 맞춰라.
             - goal이 WEIGHT_LOSS면 감량식으로 구성해라.
             - 한국에서 일반적으로 구하기 쉬운 식재료 위주로 구성해라.
             - foods 배열의 각 원소는 반드시 하나의 음식만 표현해야 한다.
