@@ -7,26 +7,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "user_profiles",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_user_profiles_toss_user_key",
-                        columnNames = "toss_user_key"
-                )
-        }
-)
+@Table(name = "user_profiles")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserProfile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_profile_id")
-    private Long userProfileId;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(name = "toss_user_key", nullable = false, length = 100)
-    private String tossUserKey;
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "height", nullable = false)
     private Integer height;
@@ -54,7 +47,7 @@ public class UserProfile {
 
     @Builder
     public UserProfile(
-            String tossUserKey,
+            User user,
             Integer height,
             Integer weight,
             Integer age,
@@ -62,7 +55,7 @@ public class UserProfile {
             BigDecimal bmi,
             BigDecimal bodyFatRate
     ) {
-        this.tossUserKey = tossUserKey;
+        this.user = user;
         this.height = height;
         this.weight = weight;
         this.age = age;
