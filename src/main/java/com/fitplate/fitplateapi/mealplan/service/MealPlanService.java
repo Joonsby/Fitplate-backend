@@ -40,7 +40,6 @@ public class MealPlanService {
     private final UserProfileRepository userProfileRepository;
     private final NutritionCalculator nutritionCalculator;
 
-    @Transactional
     public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
         // 1. 사용자 프로필 저장/수정
         userProfileService.upsertFromMealPlanRequest(tossUserKey,request);
