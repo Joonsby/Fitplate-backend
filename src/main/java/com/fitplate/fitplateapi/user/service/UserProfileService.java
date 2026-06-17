@@ -1,9 +1,13 @@
 package com.fitplate.fitplateapi.user.service;
 
+import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanRequest;
 import com.fitplate.fitplateapi.nutrition.service.NutritionCalculator;
+import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.user.domain.UserProfile;
+import com.fitplate.fitplateapi.user.dto.UserProfileResponse;
 import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
+import com.fitplate.fitplateapi.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,47 +21,52 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserProfileService {
+    private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final NutritionCalculator nutritionCalculator;
 
+    @Transactional(readOnly = true)
+    public Optional<UserProfileResponse> getMyProfile(String tossUserKey) {
+        User user = userRepository.findByTossUserKey(tossUserKey)
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
+
+        return userProfileRepository.findByUser(user)
+                .map(UserProfileResponse::from);
+    }
+
     @Transactional
     public void upsertFromMealPlanRequest(String tossUserKey,MealPlanRequest request){
-        log.info("[UserProfileService] tossUserKey={}", tossUserKey);
-        if (tossUserKey == null || tossUserKey.isBlank()) {
-            throw new IllegalArgumentException("tossUserKey가 비어 있습니다.");
-        }
-        Optional<UserProfile> optionalProfile = userProfileRepository.findByTossUserKey(tossUserKey);
+        User user = userRepository.findByTossUserKey(tossUserKey)
+                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
         BigDecimal bmi = nutritionCalculator.calculateBmi(request.getHeight(),request.getWeight());
         BigDecimal bodyFatRate = toBigDecimal(request.getBodyFatRate());
 
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElse(null);
 
-        if (optionalProfile.isPresent()) {
-            UserProfile profile = optionalProfile.get();
-
-            profile.update(
-                    request.getHeight(),
-                    request.getWeight(),
-                    request.getAge(),
-                    request.getGender(),
-                    bmi,
-                    bodyFatRate
-            );
-
+        if(profile == null){
+            UserProfile newProfile = UserProfile.builder()
+                    .user(user)
+                    .height(request.getHeight())
+                    .weight(request.getWeight())
+                    .age(request.getAge())
+                    .gender(request.getGender())
+                    .bmi(bmi)
+                    .bodyFatRate(bodyFatRate)
+                    .build();
+            userProfileRepository.save(newProfile);
             return;
         }
 
-        UserProfile profile = UserProfile.builder()
-                .tossUserKey(tossUserKey)
-                .height(request.getHeight())
-                .weight(request.getWeight())
-                .age(request.getAge())
-                .gender(request.getGender())
-                .bmi(bmi)
-                .bodyFatRate(bodyFatRate)
-                .build();
-
-        userProfileRepository.save(profile);
+        profile.update(
+                request.getHeight(),
+                request.getWeight(),
+                request.getAge(),
+                request.getGender(),
+                bmi,
+                bodyFatRate
+        );
     }
 
     private BigDecimal toBigDecimal(Double value) {

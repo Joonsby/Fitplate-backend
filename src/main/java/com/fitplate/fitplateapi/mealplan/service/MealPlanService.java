@@ -40,7 +40,6 @@ public class MealPlanService {
     private final UserProfileRepository userProfileRepository;
     private final NutritionCalculator nutritionCalculator;
 
-    @Transactional
     public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
         // 1. 사용자 프로필 저장/수정
         userProfileService.upsertFromMealPlanRequest(tossUserKey,request);
@@ -81,8 +80,11 @@ public class MealPlanService {
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
-        UserProfile profile = userProfileRepository.findByTossUserKey(tossUserKey)
-                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자 프로필을 찾을 수 없습니다"));
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        user.getUserId(),
+                        "사용자 프로필을 찾을 수 없습니다"
+                ));
 
         String aiResponseJson = request.getAiMealPlanResponse().toString();
         String aiResponseHash = sha256(aiResponseJson);
@@ -149,6 +151,7 @@ public class MealPlanService {
                 .toList();
     }
 
+    @Transactional
     public void deleteMealPlan(String tossUserKey, Long mealPlanId) {
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
@@ -156,6 +159,7 @@ public class MealPlanService {
         MealPlan mealPlan = mealPlanRepository.findById(mealPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
 
+        log.info("user : {}, mealPlan.user : {}", user, mealPlan.getUser());
         if (!mealPlan.getUser().equals(user)) {
             throw new IllegalArgumentException("해당 식단에 대한 삭제 권한이 없습니다");
         }

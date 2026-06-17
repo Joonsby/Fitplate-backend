@@ -116,7 +116,6 @@ public class GeminiMealPlanClient {
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
-            e.printStackTrace();
             throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }
