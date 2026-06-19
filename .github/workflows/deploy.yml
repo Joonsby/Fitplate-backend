@@ -26,7 +26,8 @@ jobs:
 
       - name: Deploy dev
         if: ${{ inputs.target_branch == 'dev' }}
-        run: |          
+        run: |
+          docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml down --remove-orphans
           docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml up -d --build
           docker ps
 
