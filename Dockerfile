@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN ./gradlew build -x test
+RUN chmod +x ./gradlew
+RUN ./gradlew clean build -x test --no-daemon
 
 ENTRYPOINT ["java","-jar","build/libs/fitplate-api-0.0.1-SNAPSHOT.jar"]
