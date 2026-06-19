@@ -16,12 +16,13 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-            .allowedOrigins(
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173",
-                    "https://fitplate.apps.tossmini.com",
-                    "https://fitplate.private-apps.tossmini.com"
-            )
+             .allowedOriginPatterns(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://192.168.*.*:*",
+                "https://fitplate.apps.tossmini.com",
+                "https://fitplate.private-apps.tossmini.com"
+             )
             .allowedMethods(
                 "GET",
                 "POST",
