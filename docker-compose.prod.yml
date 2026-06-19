@@ -8,12 +8,12 @@ services:
       MYSQL_DATABASE: fitplate_prod
       MYSQL_USER: fitplate_prod_user
       MYSQL_PASSWORD: fitplate_prod
-    ports:
-      - "3308:3306"
     volumes:
       - mysql_prod_data:/var/lib/mysql
+    expose:
+      - "3306"
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "-p${DB_PASSWORD}" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "fitplate_prod_user", "-pfitplate_prod"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,11 +23,23 @@ services:
     container_name: fitplate-backend-prod
     restart: always
     depends_on:
-      - mysql
-    ports:
-      - "8080:8080"
+      mysql:
+        condition: service_healthy
     env_file:
       - /home/ubuntu/config/fitplate-prod.env
+    expose:
+      - "8080"
+
+  nginx:
+    image: nginx:alpine
+    container_name: fitplate-nginx-prod
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
   mysql_prod_data:
