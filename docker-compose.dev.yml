@@ -29,6 +29,8 @@ services:
       - /home/ubuntu/config/fitplate-dev.env
     ports:
       - "8081:8080"
+    volumes:
+      - /home/ubuntu/config/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
 
 volumes:
   mysql_dev_data:

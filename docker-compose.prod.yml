@@ -29,6 +29,8 @@ services:
       - /home/ubuntu/config/fitplate-prod.env
     expose:
       - "8080"
+    volumes:
+      - /home/ubuntu/config/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
 
   nginx:
     image: nginx:alpine
