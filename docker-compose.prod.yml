@@ -4,7 +4,7 @@ services:
     container_name: fitplate-mysql-prod
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: fitplate_prod
       MYSQL_USER: fitplate_prod_user
       MYSQL_PASSWORD: fitplate_prod
