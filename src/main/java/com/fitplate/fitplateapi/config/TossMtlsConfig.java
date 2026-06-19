@@ -10,11 +10,12 @@ import org.apache.hc.core5.ssl.SSLContexts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import javax.net.ssl.SSLContext;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyStore;
 
 @Configuration
@@ -23,13 +24,13 @@ public class TossMtlsConfig {
     @Bean(name = "tossRestClient")
     public RestClient tossRestClient(
             @Value("${toss.api.base-url}") String baseUrl,
-            @Value("${toss.mtls.cert-path}") Resource certResource,
+            @Value("${toss.mtls.cert-path}") String certPath,
             @Value("${toss.mtls.cert-password}") String certPassword
     ) throws Exception {
 
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
 
-        try (var inputStream = certResource.getInputStream()) {
+        try (var inputStream = Files.newInputStream(Path.of(certPath))) {
             keyStore.load(inputStream, certPassword.toCharArray());
         }
 
