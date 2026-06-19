@@ -33,13 +33,13 @@ jobs:
 
             if [ "${TARGET_BRANCH}" = "dev" ]; then
               cd /home/ubuntu/apps/Fitplate-backend-dev
+            
               git fetch origin dev
               git checkout dev
               git pull origin dev
-              chmod +x gradlew
-              ./gradlew clean build -x test
-              sudo systemctl restart fitplate-dev
-              sudo systemctl status fitplate-dev --no-pager
+            
+              docker compose -f docker-compose.dev.yml down
+              docker compose -f docker-compose.dev.yml up -d --build            
             fi
 
             if [ "${TARGET_BRANCH}" = "main" ]; then
@@ -47,8 +47,11 @@ jobs:
               git fetch origin main
               git checkout main
               git pull origin main
-              chmod +x gradlew
-              ./gradlew clean build -x test
-              sudo systemctl restart fitplate-prod
-              sudo systemctl status fitplate-prod --no-pager
+            
+              docker compose -f docker-compose.prod.yml down
+              docker compose -f docker-compose.prod.yml up -d --build            
+            
+              docker ps
+              docker logs --tail=100 fitplate-backend-prod
+              docker logs --tail=100 fitplate-nginx-prod
             fi
