@@ -24,8 +24,18 @@ jobs:
         with:
           ref: ${{ inputs.target_branch }}
 
+      - name: Sync source to deploy directory
+        run: |
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'build' \
+            --exclude '.gradle' \
+            ./ /home/ubuntu/deploy/fitplate-backend/
+
       - name: Deploy dev
         if: ${{ inputs.target_branch == 'dev' }}
+        working-directory: /home/ubuntu/deploy/fitplate-backend
         run: |
           docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml down --remove-orphans
           docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml up -d --build
@@ -33,6 +43,7 @@ jobs:
 
       - name: Deploy prod
         if: ${{ inputs.target_branch == 'main' }}
+        working-directory: /home/ubuntu/deploy/fitplate-backend
         run: |
           docker compose --env-file /home/ubuntu/config/fitplate-prod.env -f docker-compose.prod.yml up -d --build
           docker ps
