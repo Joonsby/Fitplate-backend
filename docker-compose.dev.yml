@@ -2,9 +2,9 @@ services:
   mysql-dev:
     image: mysql:8.0
     container_name: fitplate-mysql-dev
-    restart: always
+    restart: "no"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: fitplate_dev
       MYSQL_USER: fitplate_dev_user
       MYSQL_PASSWORD: fitplate_dev
@@ -21,7 +21,7 @@ services:
   backend-dev:
     build: .
     container_name: fitplate-backend-dev
-    restart: always
+    restart: "no"
     depends_on:
       mysql-dev:
         condition: service_healthy
