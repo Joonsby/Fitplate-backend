@@ -6,7 +6,6 @@ import com.fitplate.fitplateapi.mealplan.service.MealPlanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,19 +32,6 @@ public class MealPlanController {
         String tossUserKey = extractTossUserKey(authorization);
         MealPlanGenerateResponse response = mealPlanService.generateMealPlan(tossUserKey,request);
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 식단 저장 (POST /api/meal-plan/save)
-     */
-    @PostMapping("/save")
-    public ResponseEntity<Long> saveMealPlan(
-            @RequestHeader("Authorization") String authorization,
-            @Valid @RequestBody SaveMealPlanRequest request
-    ) {
-        String tossUserKey = extractTossUserKey(authorization);
-        Long id = mealPlanService.saveMealPlan(tossUserKey,request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
    /**

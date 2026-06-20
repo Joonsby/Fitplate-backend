@@ -1,5 +1,6 @@
 package com.fitplate.fitplateapi.mealplan.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
 import com.fitplate.fitplateapi.auth.jwt.JwtTokenProvider;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -40,6 +42,7 @@ public class MealPlanService {
     private final UserProfileRepository userProfileRepository;
     private final NutritionCalculator nutritionCalculator;
 
+    @Transactional
     public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
         // 1. 사용자 프로필 저장/수정
         userProfileService.upsertFromMealPlanRequest(tossUserKey,request);
@@ -56,6 +59,9 @@ public class MealPlanService {
 
         //3. 식단 생성
         MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request, nutritionResult);
+
+        //4. 식단 저장
+        saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
@@ -74,70 +80,50 @@ public class MealPlanService {
                 .build();
     }
 
-    @Transactional
-    public long saveMealPlan(String tossUserKey, SaveMealPlanRequest request) {
-        log.info("[saveMealPlan] tossUserKey={}, request={}", tossUserKey, request);
-        User user = userRepository.findByTossUserKey(tossUserKey)
-                .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
+    private void saveGeneratedMealPlan(
+            String tossUserKey,
+            MealPlanRequest request,
+            NutritionResult nutritionResult,
+            MealPlanResponse aiMealPlanResponse
+    ){
+        //1. 사용자 조회
+        User user = userRepository.findByTossUserKey(tossUserKey).orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
 
-        UserProfile profile = userProfileRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        user.getUserId(),
-                        "사용자 프로필을 찾을 수 없습니다"
-                ));
+        //2. 사용자 프로필 조회
+        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException(user.getUserId(),"사용자 프로필을 찾을 수 없습니다"));
 
-        String aiResponseJson = request.getAiMealPlanResponse().toString();
-        String aiResponseHash = sha256(aiResponseJson);
-
-        boolean alreadySaved = mealPlanRepository.existsByUserAndAiResponseHash(
-                user,
-                aiResponseHash
-        );
-
-        if (alreadySaved) {
-            throw new DuplicateMealPlanException();
+        //3. AI 식단 응답 JSON 변환
+        String aiResponseJson;
+        try{
+            aiResponseJson = objectMapper.writeValueAsString(aiMealPlanResponse);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("AI 식단 응답 JSON 변환 실패",e);
         }
 
-        Double bodyFatRate = profile.getBodyFatRate() == null
-                ? null
-                : profile.getBodyFatRate().doubleValue();
-
-        NutritionResult nutrition = nutritionCalculator.calculate(
-                profile.getHeight(),
-                profile.getWeight(),
-                profile.getAge(),
-                bodyFatRate,
-                profile.getGender(),
-                request.getGoal()
-        );
-
-        LocalDateTime now = LocalDateTime.now();
-
+        //4. 식단 계획 생성
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
                 .durationDays(request.getDurationDays())
-                .height(profile.getHeight())
-                .weight(profile.getWeight())
-                .age(profile.getAge())
-                .gender(profile.getGender())
+                .height(request.getHeight())
+                .weight(request.getWeight())
+                .age(request.getAge())
+                .gender(request.getGender())
                 .bmi(profile.getBmi())
                 .bodyFatRate(profile.getBodyFatRate())
-                .targetCalories(nutrition.getTargetCalories())
-                .bmr(nutrition.getBmr())
-                .tdee(nutrition.getTdee())
-                .proteinGram(nutrition.getProteinGram())
-                .carbsGram(nutrition.getCarbsGram())
-                .fatGram(nutrition.getFatGram())
+                .targetCalories(nutritionResult.getTargetCalories())
+                .bmr(nutritionResult.getBmr())
+                .tdee(nutritionResult.getTdee())
+                .proteinGram(nutritionResult.getProteinGram())
+                .carbsGram(nutritionResult.getCarbsGram())
+                .fatGram(nutritionResult.getFatGram())
                 .aiResponseJson(aiResponseJson)
-                .aiResponseHash(aiResponseHash)
-                .startedAt(now)
-                .expiresAt(now.plusDays(request.getDurationDays()))
+                .startedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusDays(request.getDurationDays()))
                 .build();
 
+        //5. 식단 계획 저장
         mealPlanRepository.save(mealPlan);
-
-        return mealPlan.getId();
     }
 
     @Transactional(readOnly = true)

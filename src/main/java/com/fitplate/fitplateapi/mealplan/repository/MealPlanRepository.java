@@ -17,17 +17,4 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
      * 특정 사용자의 모든 식단을 최신 생성 순서로 조회.
      */
     List<MealPlan> findByUserOrderByCreatedAtDesc(User user);
-
-    /**
-     * 특정 사용자의 유효한(now 이후 만료) 식단 중 가장 최신 하나를 조회.
-     */
-    Optional<MealPlan> findFirstByUserAndExpiresAtAfterOrderByCreatedAtDesc(
-            User user,
-            LocalDateTime now
-    );
-
-    boolean existsByUserAndAiResponseHash(
-            User user,
-            String aiResponseHash
-    );
 }
