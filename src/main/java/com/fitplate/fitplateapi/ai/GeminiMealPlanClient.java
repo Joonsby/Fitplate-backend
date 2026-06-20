@@ -61,7 +61,9 @@ public class GeminiMealPlanClient {
      * @throws RuntimeException API 호출 실패 시
      */
     public MealPlanResponse generateMealPlan(MealPlanRequest request, NutritionResult nutritionResult) {
+        long startTime = System.currentTimeMillis();
         try {
+            log.info("Gemini API 호출 시작");
             // 요청 JSON 구성 (Map → JSON 변환)
             Map<String, Object> geminiRequest = Map.of(
                     "contents", List.of(
@@ -89,8 +91,12 @@ public class GeminiMealPlanClient {
                     .retrieve()
                     .body(String.class);
 
+            log.info("Gemini API 호출 완료. 응답 시간: {}ms", System.currentTimeMillis() - startTime);
+
             // 응답 JSON 파싱
             JsonNode root = objectMapper.readTree(rawResponse);
+
+            log.info("Gemini 응답 JSON 파싱 완료");
 
             // candidates[0].content.parts[0].text 에서 식단 JSON 추출
             String jsonText = root
@@ -102,8 +108,12 @@ public class GeminiMealPlanClient {
                     .path("text")
                     .asText();
 
+            log.info("Gemini API 응답 완료. {}ms",
+                    System.currentTimeMillis() - startTime);
+
             // MealPlanResponse로 역직렬화
             return objectMapper.readValue(jsonText, MealPlanResponse.class);
+
 
         } catch(HttpClientErrorException.TooManyRequests e) {
             // Rate Limit 초과
@@ -115,7 +125,7 @@ public class GeminiMealPlanClient {
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
-            log.error("Gemini 식단 생성 API 호출 실패", e);
+            log.error("Gemini API 호출 실패. {}ms", System.currentTimeMillis() - startTime, e);
             throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }
