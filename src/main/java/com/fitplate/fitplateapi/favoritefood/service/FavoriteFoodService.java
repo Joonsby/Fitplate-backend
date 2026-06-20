@@ -10,11 +10,14 @@ import com.fitplate.fitplateapi.favoritefood.repository.FavoriteFoodRepository;
 import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,7 +29,7 @@ public class FavoriteFoodService {
 
     public List<FavoriteFoodResponse> getFavoriteFoods(String authorizationHeader) {
         User user = getUserByToken(authorizationHeader);
-
+        log.info("getFavoriteFoods 진입");
         return favoriteFoodRepository.findByUserOrderByCreatedAtDesc(user)
                 .stream()
                 .map(FavoriteFoodResponse::from)
