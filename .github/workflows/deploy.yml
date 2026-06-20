@@ -2,40 +2,20 @@ name: Deploy Fitplate Backend
 
 on:
   workflow_dispatch:
-    inputs:
-      target_branch:
-        description: "배포할 브랜치를 선택하세요."
-        required: true
-        default: dev
-        type: choice
-        options:
-          - dev
-          - main
 
-run-name: Deploy ${{ inputs.target_branch }} backend
+run-name: Deploy main backend
 
 jobs:
   deploy:
     runs-on: [self-hosted, linux, x64, fitplate-prod]
 
     steps:
-      - name: Checkout selected branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_branch }}
-
-      - name: Sync dev source
-        if: ${{ inputs.target_branch == 'dev' }}
-        run: |
-          rsync -a --delete \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude 'build' \
-            --exclude '.gradle' \
-            ./ /home/ubuntu/deploy/dev/fitplate-backend/
+          ref: main
 
       - name: Sync prod source
-        if: ${{ inputs.target_branch == 'main' }}
         run: |
           rsync -a --delete \
             --exclude '.git' \
@@ -44,16 +24,7 @@ jobs:
             --exclude '.gradle' \
             ./ /home/ubuntu/deploy/prod/fitplate-backend/
 
-      - name: Deploy dev
-        if: ${{ inputs.target_branch == 'dev' }}
-        working-directory: /home/ubuntu/deploy/dev/fitplate-backend
-        run: |
-          docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml down --remove-orphans
-          docker compose --env-file /home/ubuntu/config/fitplate-dev.env -f docker-compose.dev.yml up -d --build
-          docker ps
-
       - name: Deploy prod
-        if: ${{ inputs.target_branch == 'main' }}
         working-directory: /home/ubuntu/deploy/prod/fitplate-backend
         run: |
           docker compose --env-file /home/ubuntu/config/fitplate-prod.env -f docker-compose.prod.yml up -d --build
