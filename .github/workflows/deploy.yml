@@ -29,4 +29,5 @@ jobs:
         run: |
           docker compose --env-file /home/ubuntu/config/fitplate-prod.env -f docker-compose.prod.yml up -d --build
           docker ps
+          sleep 10
           docker logs --tail=50 fitplate-backend-prod
