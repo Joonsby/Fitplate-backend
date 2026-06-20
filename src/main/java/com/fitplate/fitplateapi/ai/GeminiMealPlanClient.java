@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanRequest;
 import com.fitplate.fitplateapi.mealplan.dto.MealPlanResponse;
 import com.fitplate.fitplateapi.nutrition.dto.NutritionResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.Map;
  * Gemini AI API와 통신하여 식단을 생성하는 클라이언트.
  * API 호출, JSON 요청/응답 처리, 에러 처리를 담당한다.
  */
+@Slf4j
 @Component
 public class GeminiMealPlanClient {
 
@@ -87,9 +89,6 @@ public class GeminiMealPlanClient {
                     .retrieve()
                     .body(String.class);
 
-            // 디버깅용 로그 (운영 환경에서는 제거)
-            System.out.println("Gemini Response: " + rawResponse + "\n");
-
             // 응답 JSON 파싱
             JsonNode root = objectMapper.readTree(rawResponse);
 
@@ -116,6 +115,7 @@ public class GeminiMealPlanClient {
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
+            log.error("Gemini 식단 생성 API 호출 실패", e);
             throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }
