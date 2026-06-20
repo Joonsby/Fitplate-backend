@@ -1,0 +1,2 @@
+ALTER TABLE meal_plans
+DROP INDEX uk_meal_plans_user_response_hash;
