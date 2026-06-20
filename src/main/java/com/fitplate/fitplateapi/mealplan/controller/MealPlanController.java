@@ -35,19 +35,6 @@ public class MealPlanController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 식단 저장 (POST /api/meal-plan/save)
-     */
-    @PostMapping("/save")
-    public ResponseEntity<Long> saveMealPlan(
-            @RequestHeader("Authorization") String authorization,
-            @Valid @RequestBody SaveMealPlanRequest request
-    ) {
-        String tossUserKey = extractTossUserKey(authorization);
-        Long id = mealPlanService.saveMealPlan(tossUserKey,request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
-    }
-
    /**
     * 저장된 식단 목록 조회 (GET /api/meal-plan/users/{tossUserKey})
     */

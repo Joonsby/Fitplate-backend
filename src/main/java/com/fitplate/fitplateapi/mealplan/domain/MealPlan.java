@@ -83,9 +83,6 @@ public class MealPlan {
     @Column(nullable = false, columnDefinition = "JSON")
     private String aiResponseJson;
 
-    @Column(nullable = false, length = 64)
-    private String aiResponseHash;
-
     /** 식단 시작 일시. */
     @Column(nullable = false)
     private LocalDateTime startedAt;
@@ -130,7 +127,6 @@ public class MealPlan {
             Integer fatGram,
             BigDecimal bodyFatRate,
             String aiResponseJson,
-            String aiResponseHash,
             LocalDateTime startedAt,
             LocalDateTime expiresAt
     ) {
@@ -150,7 +146,6 @@ public class MealPlan {
         this.fatGram = fatGram;
         this.bodyFatRate = bodyFatRate;
         this.aiResponseJson = aiResponseJson;
-        this.aiResponseHash = aiResponseHash;
         this.startedAt = startedAt;
         this.expiresAt = expiresAt;
     }
