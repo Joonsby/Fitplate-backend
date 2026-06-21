@@ -147,7 +147,7 @@ public class GeminiMealPlanClient {
             설명 문장, 마크다운, 코드블록은 절대 반환하지 마라.
 
             조건:
-            - durationDays 개수만큼 days 배열을 생성해라.
+            - durationDayss 개수만큼 days 배열을 생성해라.
             - 하루에는 breakfast, lunch, dinner 3끼를 모두 포함해라.
             - mealType은 반드시 breakfast, lunch, dinner 중 하나만 사용해라.
             - 음식명은 "현미밥과 닭가슴살 미역국"처럼 합치지 말고 반드시 개별 음식으로 분리해라.
