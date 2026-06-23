@@ -118,7 +118,6 @@ src/main/java/com/fitplate/fitplateapi/
 │  │     │  - mealPlanId: PK (자동증가)
 │  │     │  - user: 사용자 (FK)
 │  │     │  - goal: 목표
-│  │     │  - durationDays: 기간
 │  │     │  - height, weight, age, gender: 신체정보
 │  │     │  - targetCalories, bmr, tdee: 칼로리 정보
 │  │     │  - proteinGram, carbsGram, fatGram: 영양소
@@ -238,7 +237,6 @@ CREATE TABLE meal_plans (
   meal_plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
   goal VARCHAR(20) NOT NULL,
-  duration_days INT NOT NULL,
   height_cm INT NOT NULL,
   weight_kg INT NOT NULL,
   age INT NOT NULL,

@@ -68,7 +68,6 @@ public class MealPlanService {
                 .age(request.getAge())
                 .gender(request.getGender())
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
                 .targetCalories(nutritionResult.getTargetCalories())
                 .bmr(nutritionResult.getBmr())
                 .tdee(nutritionResult.getTdee())
@@ -104,7 +103,6 @@ public class MealPlanService {
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
                 .height(request.getHeight())
                 .weight(request.getWeight())
                 .age(request.getAge())
@@ -119,7 +117,6 @@ public class MealPlanService {
                 .fatGram(nutritionResult.getFatGram())
                 .aiResponseJson(aiResponseJson)
                 .startedAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusDays(request.getDurationDays()))
                 .build();
 
         //5. 식단 계획 저장

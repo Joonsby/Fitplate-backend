@@ -15,7 +15,6 @@ public class SavedMealPlanResponse {
 
     private Long id;
     private String goal;
-    private Integer durationDays;
 
     private Integer height;
     private Integer weight;
@@ -40,7 +39,6 @@ public class SavedMealPlanResponse {
         return SavedMealPlanResponse.builder()
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
-                .durationDays(mealPlan.getDurationDays())
                 .height(mealPlan.getHeight())
                 .weight(mealPlan.getWeight())
                 .age(mealPlan.getAge())

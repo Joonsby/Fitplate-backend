@@ -34,6 +34,20 @@ public class MealPlanController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 식단 저장 (POST /api/meal-plan/{id})
+     */
+    @PostMapping("/{id}")
+    public ResponseEntity<Void> saveMealPlan(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Long id,
+            @Valid @RequestBody SaveMealPlanRequest request
+    ) {
+        String tossUserKey = extractTossUserKey(authorization);
+        mealPlanService.saveMealPlan(tossUserKey,id,request);
+        return ResponseEntity.ok().build();
+    }
+
    /**
     * 저장된 식단 목록 조회 (GET /api/meal-plan/users/{tossUserKey})
     */

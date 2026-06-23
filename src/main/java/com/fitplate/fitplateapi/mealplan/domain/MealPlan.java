@@ -33,11 +33,6 @@ public class MealPlan {
     @Column(nullable = false, length = 20)
     private String goal;
 
-    /** 식단 계획 기간 (일). */
-    @Column(nullable = false)
-    private Integer durationDays;
-
-
     /** 사용자의 키 (cm). */
     @Column(nullable = false)
     private Integer height;
@@ -113,7 +108,6 @@ public class MealPlan {
     public MealPlan(
             User user,
             String goal,
-            Integer durationDays,
             Integer height,
             Integer weight,
             Integer age,
@@ -132,7 +126,6 @@ public class MealPlan {
     ) {
         this.user = user;
         this.goal = goal;
-        this.durationDays = durationDays;
         this.height = height;
         this.weight = weight;
         this.age = age;

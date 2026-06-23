@@ -91,12 +91,8 @@ public class GeminiMealPlanClient {
                     .retrieve()
                     .body(String.class);
 
-            log.info("Gemini API 호출 완료. 응답 시간: {}ms", System.currentTimeMillis() - startTime);
-
             // 응답 JSON 파싱
             JsonNode root = objectMapper.readTree(rawResponse);
-
-            log.info("Gemini 응답 JSON 파싱 완료");
 
             // candidates[0].content.parts[0].text 에서 식단 JSON 추출
             String jsonText = root
@@ -108,12 +104,8 @@ public class GeminiMealPlanClient {
                     .path("text")
                     .asText();
 
-            log.info("Gemini API 응답 완료. {}ms",
-                    System.currentTimeMillis() - startTime);
-
             // MealPlanResponse로 역직렬화
             return objectMapper.readValue(jsonText, MealPlanResponse.class);
-
 
         } catch(HttpClientErrorException.TooManyRequests e) {
             // Rate Limit 초과
@@ -125,7 +117,7 @@ public class GeminiMealPlanClient {
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
-            log.error("Gemini API 호출 실패. {}ms", System.currentTimeMillis() - startTime, e);
+            log.error("Gemini 식단 생성 API 호출 실패", e);
             throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }
@@ -146,76 +138,80 @@ public class GeminiMealPlanClient {
             반드시 아래 JSON 구조만 반환해라.
             설명 문장, 마크다운, 코드블록은 절대 반환하지 마라.
 
-            조건:
-            - durationDayss 개수만큼 days 배열을 생성해라.
-            - 하루에는 breakfast, lunch, dinner 3끼를 모두 포함해라.
-            - mealType은 반드시 breakfast, lunch, dinner 중 하나만 사용해라.
-            - 음식명은 "현미밥과 닭가슴살 미역국"처럼 합치지 말고 반드시 개별 음식으로 분리해라.
-            - 각 음식은 name, amount, calories, protein, carbohydrate, fat, shoppingKeyword를 포함해라.
-            - shoppingKeyword는 쿠팡 같은 쇼핑몰에서 검색하기 좋은 짧은 키워드로 작성해라.
-            - 각 끼니의 총 칼로리는 목표 칼로리에 맞게 구성해라.
-            - 하루 총 칼로리는 targetCalories의 ±10퍼센트 이내로 맞춰라.
-            - 하루 총 단백질은 proteinGram의 ±10퍼센트 이내로 맞춰라.
-            - 하루 총 탄수화물은 carbsGram의 ±10퍼센트 이내로 맞춰라.
-            - 하루 총 지방은 fatGram의 ±10퍼센트 이내로 맞춰라.
-            - goal이 WEIGHT_LOSS면 감량식으로 구성해라.
-            - 한국에서 일반적으로 구하기 쉬운 식재료 위주로 구성해라.
-            - foods 배열의 각 원소는 반드시 하나의 음식만 표현해야 한다.
-            잘못된 예:
-            {
-              "name": "현미밥, 닭가슴살, 미역국"
-            }
-            
-            올바른 예:
-            {
-              "name": "현미밥"
-            },
-            {
-              "name": "닭가슴살"
-            },
-            {
-              "name": "미역국"
-            }
+        조건:
+        - 하루 식단 1개만 생성해라.
+        - meals 배열에는 breakfast, lunch, dinner 3끼를 모두 포함해라.
+        - mealType은 반드시 breakfast, lunch, dinner 중 하나만 사용해라.
+        - foods 배열의 각 원소는 반드시 하나의 음식만 표현해야 한다.
+        - 음식명은 "현미밥과 닭가슴살 미역국"처럼 합치지 말고 반드시 개별 음식으로 분리해라.
+        - 각 음식은 name, amount, calories, protein, carbohydrate, fat, shoppingKeyword를 포함해라.
+        - shoppingKeyword는 쿠팡 같은 쇼핑몰에서 검색하기 좋은 짧은 키워드로 작성해라.
+        - 하루 총 칼로리는 targetCalories의 ±10퍼센트 이내로 맞춰라.
+        - 하루 총 단백질은 proteinGram의 ±10퍼센트 이내로 맞춰라.
+        - 하루 총 탄수화물은 carbsGram의 ±10퍼센트 이내로 맞춰라.
+        - 하루 총 지방은 fatGram의 ±10퍼센트 이내로 맞춰라.
+        - goal이 WEIGHT_LOSS면 감량식으로 구성해라.
+        - 한국에서 일반적으로 구하기 쉬운 식재료 위주로 구성해라.
 
-            반환 JSON 예시:
+        잘못된 예:
+        {
+          "name": "현미밥, 닭가슴살, 미역국"
+        }
+
+        올바른 예:
+        {
+          "name": "현미밥"
+        },
+        {
+          "name": "닭가슴살"
+        },
+        {
+          "name": "미역국"
+        }
+
+        반환 JSON 예시:
+        {
+          "meals": [
             {
-              "days": [
+              "mealType": "breakfast",
+              "title": "아침",
+              "foods": [
                 {
-                  "dayNumber": 1,
-                  "meals": [
-                    {
-                      "mealType": "breakfast",
-                      "title": "아침",
-                      "foods": [
-                        {
-                          "name": "현미밥",
-                          "amount": "150g",
-                          "calories": 230,
-                          "protein": 5,
-                          "carbohydrate": 48,
-                          "fat": 2,
-                          "shoppingKeyword": "현미밥 즉석밥"
-                        }
-                      ]
-                    }
-                  ]
+                  "name": "현미밥",
+                  "amount": "150g",
+                  "calories": 230,
+                  "protein": 5,
+                  "carbohydrate": 48,
+                  "fat": 2,
+                  "shoppingKeyword": "현미밥 즉석밥"
                 }
               ]
+            },
+            {
+              "mealType": "lunch",
+              "title": "점심",
+              "foods": []
+            },
+            {
+              "mealType": "dinner",
+              "title": "저녁",
+              "foods": []
             }
+          ]
+        }
 
-            사용자 정보:
-            height=%s
-            weight=%s
-            gender=%s
-            age=%s
-            bodyFatRate=%s
-            goal=%s
-            durationDays=%s
-            targetCalories=%s
-            proteinGram=%s
-            carbsGram=%s
-            fatGram=%s
-            """.formatted(
+        사용자 정보:
+        height=%s
+        weight=%s
+        gender=%s
+        age=%s
+        bodyFatRate=%s
+        goal=%s
+        targetCalories=%s
+        proteinGram=%s
+        carbsGram=%s
+        fatGram=%s
+        """.formatted(
                 request.getHeight(),
                 request.getWeight(),
                 request.getGender(),
@@ -274,7 +270,7 @@ public class GeminiMealPlanClient {
                 "required", List.of("mealType", "title", "foods")
         );
 
-        Map<String, Object> daySchema = Map.of(
+        return Map.of(
                 "type", "object",
                 "properties", Map.of(
                         "dayNumber", Map.of("type", "integer"),
@@ -283,18 +279,7 @@ public class GeminiMealPlanClient {
                                 "items", mealSchema
                         )
                 ),
-                "required", List.of("dayNumber", "meals")
-        );
-
-        return Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "days", Map.of(
-                                "type", "array",
-                                "items", daySchema
-                        )
-                ),
-                "required", List.of("days")
+                "required", List.of("meals")
         );
     }
 }
