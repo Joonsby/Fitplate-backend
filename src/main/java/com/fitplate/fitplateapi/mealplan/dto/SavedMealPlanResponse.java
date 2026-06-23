@@ -30,8 +30,6 @@ public class SavedMealPlanResponse {
 
     private MealPlanResponse aiMealPlanResponse;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -50,8 +48,6 @@ public class SavedMealPlanResponse {
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
                 .aiMealPlanResponse(toMealPlanResponse(mealPlan.getAiResponseJson(), objectMapper))
-                .startedAt(mealPlan.getStartedAt())
-                .expiresAt(mealPlan.getExpiresAt())
                 .createdAt(mealPlan.getCreatedAt())
                 .updatedAt(mealPlan.getUpdatedAt())
                 .build();

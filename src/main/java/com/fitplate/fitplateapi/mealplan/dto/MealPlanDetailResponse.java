@@ -34,8 +34,6 @@ public class MealPlanDetailResponse {
 
     private MealPlanResponse aiMealPlanResponse;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -60,8 +58,6 @@ public class MealPlanDetailResponse {
                         mealPlan.getAiResponseJson(),
                         objectMapper
                 ))
-                .startedAt(mealPlan.getStartedAt())
-                .expiresAt(mealPlan.getExpiresAt())
                 .createdAt(mealPlan.getCreatedAt())
                 .updatedAt(mealPlan.getUpdatedAt())
                 .build();

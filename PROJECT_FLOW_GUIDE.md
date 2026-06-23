@@ -122,14 +122,13 @@ src/main/java/com/fitplate/fitplateapi/
 │  │     │  - targetCalories, bmr, tdee: 칼로리 정보
 │  │     │  - proteinGram, carbsGram, fatGram: 영양소
 │  │     │  - aiResponseJson: AI 응답 (JSON)
-│  │     │  - startedAt, expiresAt: 시작/종료 시간
 │  │     │  - createdAt, updatedAt: 생성/수정 시간 (자동)
 │  │     └─ 주석: 각 필드 상세 설명 ✅
 │  │
 │  ├─ dto/
 │  │  ├─ MealPlanRequest.java
 │  │  │  └─ 설명: 클라이언트 요청 데이터 (입력)
-│  │  │     필드: height, weight, age, gender, bodyFatRate, goal, periodDays
+│  │  │     필드: height, weight, age, gender, bodyFatRate, goal
 │  │  │     검증: @NotNull, @Min, @Max 등
 │  │  │     주석: ✅
 │  │  │
@@ -249,7 +248,6 @@ CREATE TABLE meal_plans (
   fat_gram INT NOT NULL,
   ai_response_json JSON NOT NULL,
   started_at DATETIME NOT NULL,
-  expires_at DATETIME NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -349,7 +347,6 @@ Content-Type: application/json
   "gender": "MALE",
   "bodyFatRate": 20.5,
   "goal": "MUSCLE_GAIN",
-  "periodDays": 7
 }
 ```
 

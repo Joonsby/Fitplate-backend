@@ -78,14 +78,6 @@ public class MealPlan {
     @Column(nullable = false, columnDefinition = "JSON")
     private String aiResponseJson;
 
-    /** 식단 시작 일시. */
-    @Column(nullable = false)
-    private LocalDateTime startedAt;
-
-    /** 식단 종료 일시. */
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
-
     /** 생성 시간 (자동 설정, 이후 불변). */
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -121,8 +113,7 @@ public class MealPlan {
             Integer fatGram,
             BigDecimal bodyFatRate,
             String aiResponseJson,
-            LocalDateTime startedAt,
-            LocalDateTime expiresAt
+            String mealPlanHash
     ) {
         this.user = user;
         this.goal = goal;
@@ -139,7 +130,5 @@ public class MealPlan {
         this.fatGram = fatGram;
         this.bodyFatRate = bodyFatRate;
         this.aiResponseJson = aiResponseJson;
-        this.startedAt = startedAt;
-        this.expiresAt = expiresAt;
     }
 }

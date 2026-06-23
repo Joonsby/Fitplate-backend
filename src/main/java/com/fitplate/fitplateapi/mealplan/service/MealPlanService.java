@@ -116,7 +116,6 @@ public class MealPlanService {
                 .carbsGram(nutritionResult.getCarbsGram())
                 .fatGram(nutritionResult.getFatGram())
                 .aiResponseJson(aiResponseJson)
-                .startedAt(LocalDateTime.now())
                 .build();
 
         //5. 식단 계획 저장
@@ -156,22 +155,5 @@ public class MealPlanService {
         return mealPlanRepository.findById(mealPlanId)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
                 .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
-    }
-
-    private String sha256(String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-
-            StringBuilder hexString = new StringBuilder();
-
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 해시 생성 실패", e);
-        }
     }
 }

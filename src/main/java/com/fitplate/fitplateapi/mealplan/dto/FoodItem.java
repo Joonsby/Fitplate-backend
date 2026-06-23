@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FoodItem {
-    private String mealType;
     private String name;
     private String amount;
     private Integer calories;

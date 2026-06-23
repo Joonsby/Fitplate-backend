@@ -218,7 +218,6 @@ public class GeminiMealPlanClient {
                 request.getAge(),
                 request.getBodyFatRate(),
                 request.getGoal(),
-                request.getDurationDays(),
                 nutritionResult.getTargetCalories(),
                 nutritionResult.getProteinGram(),
                 nutritionResult.getCarbsGram(),
