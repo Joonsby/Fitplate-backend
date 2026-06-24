@@ -7,7 +7,6 @@ import com.fitplate.fitplateapi.mealplan.dto.MealPlanResponse;
 import com.fitplate.fitplateapi.nutrition.dto.NutritionResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -22,7 +21,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class OpenAiMealPlanClient implements MealPlanAiClient {
+public class GeminiMealPlanClient implements MealPlanAiClient {
 
     // Spring HTTP 클라이언트
     private final RestClient restClient;
@@ -36,14 +35,13 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
     // Gemini 모델 이름 (application.yaml 주입)
     private final String model;
 
-
     /**
      * 의존성 주입 생성자.
      */
-    public OpenAiMealPlanClient(
+    public GeminiMealPlanClient(
             ObjectMapper objectMapper,
-            @Value("${openai.api-key}") String apiKey,
-            @Value("${openai.model}") String model
+            @Value("${gemini.api-key}") String apiKey,
+            @Value("${gemini.model}") String model
     ) {
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
@@ -51,81 +49,89 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
 
         // 기본 URL 설정
         this.restClient = RestClient.builder()
-                .baseUrl("https://api.openai.com/v1")
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
                 .build();
     }
 
     /**
-     * OpenAI API를 호출하여 식단을 생성한다.
+     * Gemini AI API를 호출하여 식단을 생성한다.
      *
      * @param request 사용자의 신체 정보 및 목표
      * @return AI가 생성한 식단 계획
      * @throws RuntimeException API 호출 실패 시
      */
     public MealPlanResponse generateMealPlan(MealPlanRequest request, NutritionResult nutritionResult) {
-
         long startTime = System.currentTimeMillis();
         try {
-            log.info("OpenAi API 호출 시작");
-
+            log.info("Gemini API 호출 시작");
             // 요청 JSON 구성 (Map → JSON 변환)
-            Map<String, Object> openAiRequest = Map.of(
-                    "model", model,
-                    "input", buildPrompt(request, nutritionResult),
-                    "text", Map.of(
-                            "format", Map.of(
-                                    "type", "json_schema",
-                                    "name", "meal_plan_response",
-                                    "strict", true,
-                                    "schema", buildMealPlanSchema()
+            Map<String, Object> geminiRequest = Map.of(
+                    "contents", List.of(
+                            Map.of(
+                                    "parts", List.of(
+                                            Map.of(
+                                                    "text", buildPrompt(request, nutritionResult)
+                                            )
+                                    )
                             )
+                    ),
+                    "generationConfig", Map.of(
+                            "responseMimeType", "application/json",
+                            // 스키마로 출력 형식 강제
+                            "responseSchema", buildMealPlanSchema()
                     )
             );
 
             // HTTP POST 요청 전송
             String rawResponse = restClient.post()
-                    .uri("/responses")
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri("/models/{model}:generateContent", model)
+                    .header("x-goog-api-key", apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(openAiRequest)
+                    .body(geminiRequest)
                     .retrieve()
                     .body(String.class);
+
+            log.info("Gemini API 호출 완료. 응답 시간: {}ms", System.currentTimeMillis() - startTime);
 
             // 응답 JSON 파싱
             JsonNode root = objectMapper.readTree(rawResponse);
 
-            // output 에서 식단 JSON 추출
+            log.info("Gemini 응답 JSON 파싱 완료");
+
+            // candidates[0].content.parts[0].text 에서 식단 JSON 추출
             String jsonText = root
-                    .path("output")
+                    .path("candidates")
                     .get(0)
                     .path("content")
+                    .path("parts")
                     .get(0)
                     .path("text")
                     .asText();
 
-            log.info("OpenAI API 호출 완료. {}ms", System.currentTimeMillis() - startTime);
+            log.info("Gemini API 응답 완료. {}ms",
+                    System.currentTimeMillis() - startTime);
 
             // MealPlanResponse로 역직렬화
             return objectMapper.readValue(jsonText, MealPlanResponse.class);
 
+
         } catch(HttpClientErrorException.TooManyRequests e) {
             // Rate Limit 초과
-            log.error("OpenAI 429 body={}", e.getResponseBodyAsString());
-            throw e;
+            throw new RuntimeException("AI 요청 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.", e);
 
         } catch(HttpClientErrorException.Unauthorized e) {
             // API 키 인증 실패
-            throw new RuntimeException("OpenAi API 인증에 실패했습니다.", e);
+            throw new RuntimeException("Gemini API 인증에 실패했습니다.", e);
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
-            log.error("OpenAI 식단 생성 API 호출 실패. {}ms", System.currentTimeMillis() - startTime, e);
-            throw new RuntimeException("OpenAi 식단 생성 API 호출 실패", e);
+            log.error("Gemini API 호출 실패. {}ms", System.currentTimeMillis() - startTime, e);
+            throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
         }
     }
 
     /**
-     * OpenAI에게 전달할 프롬프트를 생성한다.
+     * Gemini AI에게 전달할 프롬프트를 생성한다.
      * AI 역할/제약조건과 사용자 정보를 포함하며 JSON만 반환하도록 지시한다.
      *
      * @param request 사용자 정보
@@ -188,7 +194,6 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
     private Map<String, Object> buildMealPlanSchema() {
         Map<String, Object> foodSchema = Map.of(
                 "type", "object",
-                "additionalProperties", false,
                 "properties", Map.of(
                         "name", Map.of("type", "string"),
                         "amount", Map.of("type", "string"),
@@ -211,7 +216,6 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
 
         Map<String, Object> mealSchema = Map.of(
                 "type", "object",
-                "additionalProperties", false,
                 "properties", Map.of(
                         "mealType", Map.of(
                                 "type", "string",
@@ -226,9 +230,8 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
                 "required", List.of("mealType", "title", "foods")
         );
 
-        return Map.of(
+        Map<String, Object> daySchema = Map.of(
                 "type", "object",
-                "additionalProperties", false,
                 "properties", Map.of(
                         "dayNumber", Map.of("type", "integer"),
                         "meals", Map.of(
@@ -237,6 +240,17 @@ public class OpenAiMealPlanClient implements MealPlanAiClient {
                         )
                 ),
                 "required", List.of("dayNumber", "meals")
+        );
+
+        return Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "days", Map.of(
+                                "type", "array",
+                                "items", daySchema
+                        )
+                ),
+                "required", List.of("days")
         );
     }
 }

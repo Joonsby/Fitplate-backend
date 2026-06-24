@@ -2,7 +2,7 @@ package com.fitplate.fitplateapi.mealplan.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fitplate.fitplateapi.ai.OpenAiMealPlanClient;
+import com.fitplate.fitplateapi.ai.MealPlanAiClient;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
@@ -25,7 +25,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MealPlanService {
-    private final OpenAiMealPlanClient openAiMealPlanClient;
+    private final MealPlanAiClient mealPlanAiClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
@@ -48,7 +48,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = openAiMealPlanClient.generateMealPlan(request, nutritionResult);
+        MealPlanResponse aiMealPlanResponse = mealPlanAiClient.generateMealPlan(request, nutritionResult);
 
         //4. 식단 저장
         saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
