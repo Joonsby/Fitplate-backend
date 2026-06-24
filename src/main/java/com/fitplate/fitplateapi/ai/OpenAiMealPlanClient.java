@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class GeminiMealPlanClient {
+public class OpenAiMealPlanClient {
 
     // Spring HTTP 클라이언트
     private final RestClient restClient;
@@ -38,10 +38,10 @@ public class GeminiMealPlanClient {
     /**
      * 의존성 주입 생성자.
      */
-    public GeminiMealPlanClient(
+    public OpenAiMealPlanClient(
             ObjectMapper objectMapper,
-            @Value("${gemini.api-key}") String apiKey,
-            @Value("${gemini.model}") String model
+            @Value("${openai.api-key}") String apiKey,
+            @Value("${openai.model}") String model
     ) {
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
@@ -49,12 +49,12 @@ public class GeminiMealPlanClient {
 
         // 기본 URL 설정
         this.restClient = RestClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta")
+                .baseUrl("https://api.openai.com/v1")
                 .build();
     }
 
     /**
-     * Gemini AI API를 호출하여 식단을 생성한다.
+     * OpenAI API를 호출하여 식단을 생성한다.
      *
      * @param request 사용자의 신체 정보 및 목표
      * @return AI가 생성한 식단 계획
@@ -63,46 +63,43 @@ public class GeminiMealPlanClient {
     public MealPlanResponse generateMealPlan(MealPlanRequest request, NutritionResult nutritionResult) {
         long startTime = System.currentTimeMillis();
         try {
-            log.info("Gemini API 호출 시작");
+            log.info("OpenAi API 호출 시작");
             // 요청 JSON 구성 (Map → JSON 변환)
-            Map<String, Object> geminiRequest = Map.of(
-                    "contents", List.of(
-                            Map.of(
-                                    "parts", List.of(
-                                            Map.of(
-                                                    "text", buildPrompt(request, nutritionResult)
-                                            )
-                                    )
+            Map<String, Object> openAiRequest = Map.of(
+                    "model", model,
+                    "input", buildPrompt(request, nutritionResult),
+                    "text", Map.of(
+                            "format", Map.of(
+                                    "type", "json_schema",
+                                    "name", "meal_plan_response",
+                                    "strict", true,
+                                    "schema", buildMealPlanSchema()
                             )
-                    ),
-                    "generationConfig", Map.of(
-                            "responseMimeType", "application/json",
-                            // 스키마로 출력 형식 강제
-                            "responseSchema", buildMealPlanSchema()
                     )
             );
 
             // HTTP POST 요청 전송
             String rawResponse = restClient.post()
-                    .uri("/models/{model}:generateContent", model)
-                    .header("x-goog-api-key", apiKey)
+                    .uri("/responses")
+                    .header("Authorization", "Bearer " + apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(geminiRequest)
+                    .body(openAiRequest)
                     .retrieve()
                     .body(String.class);
 
             // 응답 JSON 파싱
             JsonNode root = objectMapper.readTree(rawResponse);
 
-            // candidates[0].content.parts[0].text 에서 식단 JSON 추출
+            // output 에서 식단 JSON 추출
             String jsonText = root
-                    .path("candidates")
+                    .path("output")
                     .get(0)
                     .path("content")
-                    .path("parts")
                     .get(0)
                     .path("text")
                     .asText();
+
+            log.info("OpenAI API 호출 완료. {}ms", System.currentTimeMillis() - startTime);
 
             // MealPlanResponse로 역직렬화
             return objectMapper.readValue(jsonText, MealPlanResponse.class);
@@ -113,17 +110,17 @@ public class GeminiMealPlanClient {
 
         } catch(HttpClientErrorException.Unauthorized e) {
             // API 키 인증 실패
-            throw new RuntimeException("Gemini API 인증에 실패했습니다.", e);
+            throw new RuntimeException("OpenAi API 인증에 실패했습니다.", e);
 
         } catch (Exception e) {
             // 네트워크/파싱 등 기타 예외
-            log.error("Gemini 식단 생성 API 호출 실패", e);
-            throw new RuntimeException("Gemini 식단 생성 API 호출 실패", e);
+            log.error("OpenAI 식단 생성 API 호출 실패. {}ms", System.currentTimeMillis() - startTime, e);
+            throw new RuntimeException("OpenAi 식단 생성 API 호출 실패", e);
         }
     }
 
     /**
-     * Gemini AI에게 전달할 프롬프트를 생성한다.
+     * OpenAI에게 전달할 프롬프트를 생성한다.
      * AI 역할/제약조건과 사용자 정보를 포함하며 JSON만 반환하도록 지시한다.
      *
      * @param request 사용자 정보
@@ -151,54 +148,7 @@ public class GeminiMealPlanClient {
         - 하루 총 탄수화물은 carbsGram의 ±10퍼센트 이내로 맞춰라.
         - 하루 총 지방은 fatGram의 ±10퍼센트 이내로 맞춰라.
         - goal이 WEIGHT_LOSS면 감량식으로 구성해라.
-        - 한국에서 일반적으로 구하기 쉬운 식재료 위주로 구성해라.
-
-        잘못된 예:
-        {
-          "name": "현미밥, 닭가슴살, 미역국"
-        }
-
-        올바른 예:
-        {
-          "name": "현미밥"
-        },
-        {
-          "name": "닭가슴살"
-        },
-        {
-          "name": "미역국"
-        }
-
-        반환 JSON 예시:
-        {
-          "meals": [
-            {
-              "mealType": "breakfast",
-              "title": "아침",
-              "foods": [
-                {
-                  "name": "현미밥",
-                  "amount": "150g",
-                  "calories": 230,
-                  "protein": 5,
-                  "carbohydrate": 48,
-                  "fat": 2,
-                  "shoppingKeyword": "현미밥 즉석밥"
-                }
-              ]
-            },
-            {
-              "mealType": "lunch",
-              "title": "점심",
-              "foods": []
-            },
-            {
-              "mealType": "dinner",
-              "title": "저녁",
-              "foods": []
-            }
-          ]
-        }
+        - 한국에서 일반적으로 구하기 쉬운 식재료 위주로 구성해라.        
 
         사용자 정보:
         height=%s
@@ -233,6 +183,7 @@ public class GeminiMealPlanClient {
     private Map<String, Object> buildMealPlanSchema() {
         Map<String, Object> foodSchema = Map.of(
                 "type", "object",
+                "additionalProperties", false,
                 "properties", Map.of(
                         "name", Map.of("type", "string"),
                         "amount", Map.of("type", "string"),
@@ -255,6 +206,7 @@ public class GeminiMealPlanClient {
 
         Map<String, Object> mealSchema = Map.of(
                 "type", "object",
+                "additionalProperties", false,
                 "properties", Map.of(
                         "mealType", Map.of(
                                 "type", "string",
@@ -271,6 +223,7 @@ public class GeminiMealPlanClient {
 
         return Map.of(
                 "type", "object",
+                "additionalProperties", false,
                 "properties", Map.of(
                         "dayNumber", Map.of("type", "integer"),
                         "meals", Map.of(
@@ -278,7 +231,7 @@ public class GeminiMealPlanClient {
                                 "items", mealSchema
                         )
                 ),
-                "required", List.of("meals")
+                "required", List.of("dayNumber", "meals")
         );
     }
 }

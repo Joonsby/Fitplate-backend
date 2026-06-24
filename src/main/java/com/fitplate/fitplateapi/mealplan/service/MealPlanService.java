@@ -2,9 +2,7 @@ package com.fitplate.fitplateapi.mealplan.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
-import com.fitplate.fitplateapi.auth.jwt.JwtTokenProvider;
-import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
+import com.fitplate.fitplateapi.ai.OpenAiMealPlanClient;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
@@ -18,23 +16,16 @@ import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MealPlanService {
-    private final GeminiMealPlanClient geminiMealPlanClient;
+    private final OpenAiMealPlanClient openAiMealPlanClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
@@ -57,7 +48,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request, nutritionResult);
+        MealPlanResponse aiMealPlanResponse = openAiMealPlanClient.generateMealPlan(request, nutritionResult);
 
         //4. 식단 저장
         saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
