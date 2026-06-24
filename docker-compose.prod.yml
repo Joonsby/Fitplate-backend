@@ -19,6 +19,8 @@ services:
       retries: 10
 
   backend:
+    environment:
+      TZ: Asia/Seoul
     build: .
     container_name: fitplate-backend-prod
     restart: always
