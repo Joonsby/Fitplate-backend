@@ -2,9 +2,7 @@ package com.fitplate.fitplateapi.mealplan.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fitplate.fitplateapi.ai.GeminiMealPlanClient;
-import com.fitplate.fitplateapi.auth.jwt.JwtTokenProvider;
-import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
+import com.fitplate.fitplateapi.ai.MealPlanAiClient;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import com.fitplate.fitplateapi.mealplan.dto.*;
@@ -18,23 +16,16 @@ import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MealPlanService {
-    private final GeminiMealPlanClient geminiMealPlanClient;
+    private final MealPlanAiClient mealPlanAiClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
@@ -57,7 +48,7 @@ public class MealPlanService {
         );
 
         //3. 식단 생성
-        MealPlanResponse aiMealPlanResponse = geminiMealPlanClient.generateMealPlan(request, nutritionResult);
+        MealPlanResponse aiMealPlanResponse = mealPlanAiClient.generateMealPlan(request, nutritionResult);
 
         //4. 식단 저장
         saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
@@ -68,7 +59,6 @@ public class MealPlanService {
                 .age(request.getAge())
                 .gender(request.getGender())
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
                 .targetCalories(nutritionResult.getTargetCalories())
                 .bmr(nutritionResult.getBmr())
                 .tdee(nutritionResult.getTdee())
@@ -104,7 +94,6 @@ public class MealPlanService {
         MealPlan mealPlan = MealPlan.builder()
                 .user(user)
                 .goal(request.getGoal())
-                .durationDays(request.getDurationDays())
                 .height(request.getHeight())
                 .weight(request.getWeight())
                 .age(request.getAge())
@@ -118,8 +107,6 @@ public class MealPlanService {
                 .carbsGram(nutritionResult.getCarbsGram())
                 .fatGram(nutritionResult.getFatGram())
                 .aiResponseJson(aiResponseJson)
-                .startedAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusDays(request.getDurationDays()))
                 .build();
 
         //5. 식단 계획 저장
@@ -159,22 +146,5 @@ public class MealPlanService {
         return mealPlanRepository.findById(mealPlanId)
                 .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
                 .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
-    }
-
-    private String sha256(String value) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
-
-            StringBuilder hexString = new StringBuilder();
-
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 해시 생성 실패", e);
-        }
     }
 }

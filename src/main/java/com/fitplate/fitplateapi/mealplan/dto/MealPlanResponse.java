@@ -15,10 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MealPlanResponse {
-
-    /**
-     * 지정된 기간의 일일 식단 리스트 (각 요소가 하루의 아침/점심/저녁)
-     */
-    private List<MealDayResponse> days;
+    private List<MealResponse> meals;
 }
 

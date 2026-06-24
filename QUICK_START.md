@@ -16,7 +16,6 @@ POST /api/meal-plan
   "gender": "MALE",     // 성별 (MALE/FEMALE)
   "bodyFatRate": 20.5,  // 체지방률 (선택)
   "goal": "MUSCLE_GAIN", // 목표 (WEIGHT_LOSS/MUSCLE_GAIN/DIET_BALANCE)
-  "periodDays": 7       // 기간 (1~365 일)
 }
 ```
 

@@ -32,6 +32,10 @@ gemini:
   api-key: ${GEMINI_API_KEY}
   model: gemini-3.5-flash
 
+openai:
+  api-key: ${OPENAI_API_KEY}
+  model: gpt-4.1-mini
+
 server:
   port: ${SERVER_PORT:8080}
 

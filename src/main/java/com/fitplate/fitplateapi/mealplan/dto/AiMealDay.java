@@ -15,5 +15,5 @@ public class AiMealDay {
 
     private Integer dayNumber;
 
-    private List<AiMeal> meals;
+    private List<FoodItem> meals;
 }

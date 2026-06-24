@@ -47,9 +47,9 @@ public class MealPlanController {
     }
 
     /**
-     * 식단 상세 조회 (GET /api/meal-plan/detail/{id})
+     * 식단 상세 조회 (GET /api/meal-plan/{id})
      */
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<MealPlanDetailResponse> getMealPlan(@PathVariable Long id) {
         return ResponseEntity.ok(mealPlanService.findById(id));
     }

@@ -15,7 +15,6 @@ public class SavedMealPlanResponse {
 
     private Long id;
     private String goal;
-    private Integer durationDays;
 
     private Integer height;
     private Integer weight;
@@ -31,8 +30,6 @@ public class SavedMealPlanResponse {
 
     private MealPlanResponse aiMealPlanResponse;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -40,7 +37,6 @@ public class SavedMealPlanResponse {
         return SavedMealPlanResponse.builder()
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
-                .durationDays(mealPlan.getDurationDays())
                 .height(mealPlan.getHeight())
                 .weight(mealPlan.getWeight())
                 .age(mealPlan.getAge())
@@ -52,8 +48,6 @@ public class SavedMealPlanResponse {
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
                 .aiMealPlanResponse(toMealPlanResponse(mealPlan.getAiResponseJson(), objectMapper))
-                .startedAt(mealPlan.getStartedAt())
-                .expiresAt(mealPlan.getExpiresAt())
                 .createdAt(mealPlan.getCreatedAt())
                 .updatedAt(mealPlan.getUpdatedAt())
                 .build();

@@ -16,7 +16,6 @@ public class MealPlanGenerateResponse {
     private Integer age;
     private String gender;
     private String goal;
-    private Integer durationDays;
 
     private Integer targetCalories;
     private Integer bmr;
