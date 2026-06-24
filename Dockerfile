@@ -7,4 +7,4 @@ COPY . .
 RUN chmod +x ./gradlew
 RUN ./gradlew clean build -x test --no-daemon
 
-ENTRYPOINT ["java","-jar","build/libs/fitplate-api-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java","-Duser.timezone=Asia/Seoul","-jar","build/libs/fitplate-api-0.0.1-SNAPSHOT.jar"]
