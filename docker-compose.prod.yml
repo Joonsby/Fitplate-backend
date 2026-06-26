@@ -8,6 +8,8 @@ services:
       MYSQL_DATABASE: fitplate_prod
       MYSQL_USER: fitplate_prod_user
       MYSQL_PASSWORD: fitplate_prod
+    env_file:
+      - /home/ubuntu/config/fitplate-prod.env
     volumes:
       - mysql_prod_data:/var/lib/mysql
     expose:
