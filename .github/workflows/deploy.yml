@@ -25,12 +25,12 @@ jobs:
             --exclude '.github' \
             --exclude 'build' \
             --exclude '.gradle' \
-            ./ /home/ubuntu/deploy/prod/fitplate-backend/
+            ./ /home/ubuntu/apps/fitplate-backend/
 
       - name: Deploy prod
-        working-directory: /home/ubuntu/deploy/prod/fitplate-backend
+        working-directory: /home/ubuntu/apps/fitplate-backend
         run: |
-          docker compose --env-file /home/ubuntu/config/fitplate-prod.env -f docker-compose.prod.yml up -d --build
+          docker compose -f docker-compose.prod.yml up -d --build
           docker ps
           sleep 10
           docker logs --tail=50 fitplate-backend-prod
