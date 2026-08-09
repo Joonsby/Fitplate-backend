@@ -9,7 +9,7 @@ services:
       MYSQL_USER: fitplate_prod_user
       MYSQL_PASSWORD: fitplate_prod
     env_file:
-      - /home/ubuntu/config/fitplate-prod.env
+      - /home/joonsby/secrets/fitplate-prod.env
     volumes:
       - mysql_prod_data:/var/lib/mysql
     expose:
@@ -30,11 +30,11 @@ services:
       mysql:
         condition: service_healthy
     env_file:
-      - /home/ubuntu/config/fitplate-prod.env
+      - /home/joonsby/secrets/fitplate-prod.env
     expose:
       - "8080"
     volumes:
-      - /home/ubuntu/config/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
+      - /home/joonsby/config/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
 
   nginx:
     image: nginx:alpine
@@ -47,7 +47,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
-      - /home/ubuntu/certs/fitplate:/etc/nginx/certs:ro
+      - /home/joonsby/certs/fitplate:/etc/nginx/certs:ro
 
 volumes:
   mysql_prod_data:

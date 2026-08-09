@@ -1,9 +1,6 @@
 name: Deploy Fitplate Backend
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 run-name: Deploy main backend
@@ -25,10 +22,10 @@ jobs:
             --exclude '.github' \
             --exclude 'build' \
             --exclude '.gradle' \
-            ./ /home/ubuntu/apps/fitplate-backend/
+            ./ /home/joonsby/apps/fitplate-backend/
 
       - name: Deploy prod
-        working-directory: /home/ubuntu/apps/fitplate-backend
+        working-directory: /home/joonsby/apps/fitplate-backend
         run: |
           docker compose -f docker-compose.prod.yml up -d --build
           docker ps
