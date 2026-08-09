@@ -37,7 +37,7 @@ gemini:
 
 openai:
   api-key: ${OPENAI_API_KEY}
-  model: gpt-4.1-mini
+  model: gpt-5.4-mini
 
 server:
   port: ${SERVER_PORT:8080}
