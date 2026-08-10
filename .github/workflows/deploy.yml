@@ -30,12 +30,12 @@ jobs:
       - name: Deploy prod
         working-directory: /home/joonsby/apps/fitplate-backend
         run: |
-          docker compose -f docker-compose.prod.yml up -d --build
+          docker compose \
+          --env-file /home/joonsby/secrets/fitplate-prod.env \
+          -f docker-compose.prod.yml \
+          up -d --build
+          
           docker ps
-
-      - name: Wait for backend
-        run: |
-          sleep 10
 
       - name: Show backend logs
         run: |
@@ -43,5 +43,21 @@ jobs:
 
       - name: Health check
         run: |
-          curl --fail --retry 10 --retry-delay 3 \
-            http://localhost:8080/swagger-ui/index.html
+          for i in {1..20}; do
+            if curl -f http://localhost:8080/swagger-ui/index.html; then
+              echo "Backend is healthy"
+              exit 0
+            fi
+          
+            echo "Waiting for backend... ($i/20)"
+            sleep 3
+          done
+          
+          echo "Backend health check failed"
+          docker logs --tail=200 fitplate-backend-prod
+          exit 1
+
+      - name: Show backend logs
+        if: always()
+        run: |
+          docker logs --tail=200 fitplate-backend-prod          
