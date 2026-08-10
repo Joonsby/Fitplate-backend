@@ -34,7 +34,7 @@ services:
     expose:
       - "8080"
     volumes:
-      - /home/joonsby/config/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
+      - /home/joonsby/secrets/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
 
   nginx:
     image: nginx:alpine
