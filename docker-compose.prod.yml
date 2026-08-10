@@ -33,6 +33,8 @@ services:
       - /home/joonsby/secrets/fitplate-prod.env
     expose:
       - "8080"
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - /home/joonsby/secrets/certs/fitplate-sandbox-mtls.p12:/app/certs/fitplate-sandbox-mtls.p12:ro
 

@@ -1,6 +1,9 @@
 name: Deploy Fitplate Backend
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 run-name: Deploy main backend
@@ -29,5 +32,16 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml up -d --build
           docker ps
+
+      - name: Wait for backend
+        run: |
           sleep 10
-          docker logs --tail=50 fitplate-backend-prod
+
+      - name: Show backend logs
+        run: |
+          docker logs --tail=50 fitplate-backend-prod          
+
+      - name: Health check
+        run: |
+          curl --fail --retry 10 --retry-delay 3 \
+            http://localhost:8080/swagger-ui/index.html
