@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     container_name: fitplate-mysql-prod
     ports:
-      - "100.122.255.99:3306"
+      - "100.122.255.99:3307:3306"
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
