@@ -2,6 +2,7 @@ package com.fitplate.fitplateapi.global.error;
 
 import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 /**
  * 모든 @RestController의 예외를 한 곳에서 JSON 형식으로 처리하는 전역 핸들러.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -51,15 +53,22 @@ public class GlobalExceptionHandler {
             Exception ex,
             WebRequest request) {
 
-        // 구체적인 서버 에러 정보는 숨기고 일반 메시지만 전달
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            .message("서버 처리 중 오류가 발생했습니다")
-            .timestamp(LocalDateTime.now())
-            .path(request.getDescription(false).replace("uri=", ""))
-            .build();
+        String path = request.getDescription(false).replace("uri=", "");
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        // 서버 로그에는 실제 예외와 stack trace 기록
+        log.error("Unhandled exception occurred. path={}", path, ex);
+
+        // 클라이언트에는 구체적인 서버 에러 정보를 숨김
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message("서버 처리 중 오류가 발생했습니다")
+                .timestamp(LocalDateTime.now())
+                .path(path)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorResponse);
     }
 
     /**
