@@ -25,10 +25,10 @@ jobs:
             --exclude '.github' \
             --exclude 'build' \
             --exclude '.gradle' \
-            ./ /home/joonsby/apps/fitplate-backend/
+            ./ /home/joonsby/apps/Fitplate-backend/
 
       - name: Deploy prod
-        working-directory: /home/joonsby/apps/fitplate-backend
+        working-directory: /home/joonsby/apps/Fitplate-backend
         run: |
           docker compose \
           --env-file /home/joonsby/secrets/fitplate-prod.env \
