@@ -44,3 +44,5 @@ src/main/resources/certs/
 *.p12
 *.pfx
 *.jks
+.gradle-local/
+.gradle.backup/
