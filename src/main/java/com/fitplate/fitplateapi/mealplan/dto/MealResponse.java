@@ -1,5 +1,6 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
+import com.fitplate.fitplateapi.mealplan.domain.MealPlanMeal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,5 +19,13 @@ public class MealResponse {
     private String mealType;
     private String title;
     private List<FoodItem> foods;
+
+    public static MealResponse from(MealPlanMeal meal) {
+        return MealResponse.builder()
+                .mealType(meal.getMealType())
+                .title(meal.getTitle())
+                .foods(meal.getFoods().stream().map(FoodItem::from).toList())
+                .build();
+    }
 }
 

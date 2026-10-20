@@ -1,7 +1,5 @@
 package com.fitplate.fitplateapi.mealplan.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.ai.MealPlanAiClient;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
@@ -10,8 +8,6 @@ import com.fitplate.fitplateapi.mealplan.repository.MealPlanRepository;
 import com.fitplate.fitplateapi.nutrition.dto.NutritionResult;
 import com.fitplate.fitplateapi.nutrition.service.NutritionCalculator;
 import com.fitplate.fitplateapi.user.domain.User;
-import com.fitplate.fitplateapi.user.domain.UserProfile;
-import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +24,8 @@ public class MealPlanService {
     private final MealPlanAiClient mealPlanAiClient;
     private final UserRepository userRepository;
     private final MealPlanRepository mealPlanRepository;
-    private final ObjectMapper objectMapper;
+    private final MealPlanStorageService mealPlanStorageService;
     private final UserProfileService userProfileService;
-    private final UserProfileRepository userProfileRepository;
     private final NutritionCalculator nutritionCalculator;
 
     public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
@@ -51,7 +46,7 @@ public class MealPlanService {
         MealPlanResponse aiMealPlanResponse = mealPlanAiClient.generateMealPlan(request, nutritionResult);
 
         //4. 식단 저장
-        saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
+        mealPlanStorageService.saveGeneratedMealPlan(tossUserKey,request,nutritionResult,aiMealPlanResponse);
 
         return MealPlanGenerateResponse.builder()
                 .height(request.getHeight())
@@ -69,50 +64,6 @@ public class MealPlanService {
                 .build();
     }
 
-    @Transactional
-    private void saveGeneratedMealPlan(
-            String tossUserKey,
-            MealPlanRequest request,
-            NutritionResult nutritionResult,
-            MealPlanResponse aiMealPlanResponse
-    ){
-        //1. 사용자 조회
-        User user = userRepository.findByTossUserKey(tossUserKey).orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
-
-        //2. 사용자 프로필 조회
-        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(() -> new ResourceNotFoundException(user.getUserId(),"사용자 프로필을 찾을 수 없습니다"));
-
-        //3. AI 식단 응답 JSON 변환
-        String aiResponseJson;
-        try{
-            aiResponseJson = objectMapper.writeValueAsString(aiMealPlanResponse);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("AI 식단 응답 JSON 변환 실패",e);
-        }
-
-        //4. 식단 계획 생성
-        MealPlan mealPlan = MealPlan.builder()
-                .user(user)
-                .goal(request.getGoal())
-                .height(request.getHeight())
-                .weight(request.getWeight())
-                .age(request.getAge())
-                .gender(request.getGender())
-                .bmi(profile.getBmi())
-                .bodyFatRate(profile.getBodyFatRate())
-                .targetCalories(nutritionResult.getTargetCalories())
-                .bmr(nutritionResult.getBmr())
-                .tdee(nutritionResult.getTdee())
-                .proteinGram(nutritionResult.getProteinGram())
-                .carbsGram(nutritionResult.getCarbsGram())
-                .fatGram(nutritionResult.getFatGram())
-                .aiResponseJson(aiResponseJson)
-                .build();
-
-        //5. 식단 계획 저장
-        mealPlanRepository.save(mealPlan);
-    }
-
     @Transactional(readOnly = true)
     public List<SavedMealPlanResponse> getSavedMealPlans(String tossUserKey) {
         User user = userRepository.findByTossUserKey(tossUserKey)
@@ -120,7 +71,7 @@ public class MealPlanService {
 
         return mealPlanRepository.findByUserOrderByCreatedAtDesc(user)
                 .stream()
-                .map(mealPlan -> SavedMealPlanResponse.from(mealPlan, objectMapper))
+                .map(SavedMealPlanResponse::from)
                 .toList();
     }
 
@@ -144,7 +95,7 @@ public class MealPlanService {
     @Transactional(readOnly = true)
     public MealPlanDetailResponse findById(Long mealPlanId) {
         return mealPlanRepository.findById(mealPlanId)
-                .map(mealPlan -> MealPlanDetailResponse.from(mealPlan, objectMapper))
+                .map(MealPlanDetailResponse::from)
                 .orElseThrow(() -> new ResourceNotFoundException(mealPlanId, "식단을 찾을 수 없습니다"));
     }
 }

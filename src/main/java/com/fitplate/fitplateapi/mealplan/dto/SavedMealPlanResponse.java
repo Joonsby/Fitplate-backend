@@ -1,13 +1,10 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-
-import static com.fitplate.fitplateapi.mealplan.dto.MealPlanDetailResponse.toMealPlanResponse;
 
 @Getter
 @Builder
@@ -33,7 +30,7 @@ public class SavedMealPlanResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static SavedMealPlanResponse from(MealPlan mealPlan, ObjectMapper objectMapper) {
+    public static SavedMealPlanResponse from(MealPlan mealPlan) {
         return SavedMealPlanResponse.builder()
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
@@ -47,7 +44,7 @@ public class SavedMealPlanResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiMealPlanResponse(toMealPlanResponse(mealPlan.getAiResponseJson(), objectMapper))
+                .aiMealPlanResponse(MealPlanResponse.from(mealPlan))
                 .createdAt(mealPlan.getCreatedAt())
                 .updatedAt(mealPlan.getUpdatedAt())
                 .build();

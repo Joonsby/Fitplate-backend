@@ -1,7 +1,5 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitplate.fitplateapi.mealplan.domain.MealPlan;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,10 +35,7 @@ public class MealPlanDetailResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static MealPlanDetailResponse from(
-            MealPlan mealPlan,
-            ObjectMapper objectMapper
-    ) {
+    public static MealPlanDetailResponse from(MealPlan mealPlan) {
         return MealPlanDetailResponse.builder()
                 .id(mealPlan.getId())
                 .goal(mealPlan.getGoal())
@@ -54,23 +49,10 @@ public class MealPlanDetailResponse {
                 .proteinGram(mealPlan.getProteinGram())
                 .carbsGram(mealPlan.getCarbsGram())
                 .fatGram(mealPlan.getFatGram())
-                .aiMealPlanResponse(toMealPlanResponse(
-                        mealPlan.getAiResponseJson(),
-                        objectMapper
-                ))
+                .aiMealPlanResponse(MealPlanResponse.from(mealPlan))
                 .createdAt(mealPlan.getCreatedAt())
                 .updatedAt(mealPlan.getUpdatedAt())
                 .build();
     }
 
-    public static MealPlanResponse toMealPlanResponse(
-            String aiResponseJson,
-            ObjectMapper objectMapper
-    ) {
-        try {
-            return objectMapper.readValue(aiResponseJson, MealPlanResponse.class);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("AI 식단 JSON 파싱에 실패했습니다.", e);
-        }
-    }
 }

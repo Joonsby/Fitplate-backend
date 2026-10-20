@@ -8,6 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 식단 계획 Entity (meal_plans 테이블 매핑).
@@ -77,6 +79,15 @@ public class MealPlan {
     @Lob
     @Column(nullable = false, columnDefinition = "JSON")
     private String aiResponseJson;
+
+    @OneToMany(mappedBy = "mealPlan", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<MealPlanMeal> meals = new ArrayList<>();
+
+    public void addMeal(MealPlanMeal meal) {
+        meals.add(meal);
+        meal.assignTo(this);
+    }
 
     /** 생성 시간 (자동 설정, 이후 불변). */
     @CreationTimestamp
