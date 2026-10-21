@@ -1,5 +1,8 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
+import com.fitplate.fitplateapi.user.domain.FoodCategory;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -39,5 +42,14 @@ public class MealPlanRequest {
 
     @NotBlank(message = "목표는 필수입니다")
     private String goal;
+
+    /** 선호 음식 분류. null 이면 저장된 값을 그대로 쓴다. */
+    private List<FoodCategory> preferredFoodCategories;
+
+    /** 제외 음식 분류. null 이면 저장된 값을 그대로 쓴다. */
+    private List<FoodCategory> excludedFoodCategories;
+
+    /** 알레르기 분류. null 이면 저장된 값을 그대로 쓴다. */
+    private List<FoodCategory> allergyFoodCategories;
 }
 
