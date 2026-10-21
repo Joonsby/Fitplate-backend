@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -37,6 +38,7 @@ public class MealPlanService {
     private final MealPlanValidator mealPlanValidator;
     private final PersonalizationService personalizationService;
     private final AiUsageQuota aiUsageQuota;
+    private final MealIntakeService mealIntakeService;
 
     public MealPlanGenerateResponse generateMealPlan(String tossUserKey,MealPlanRequest request) {
         // 1. 사용자 프로필 저장/수정
@@ -54,6 +56,11 @@ public class MealPlanService {
                 request.getGoal()
         );
 
+        // 날짜가 겹치면 AI 를 부르기 전에 막는다 (생성 횟수와 시간을 버리지 않게)
+        if (request.getPlanDate() != null) {
+            mealIntakeService.requireDateAvailable(tossUserKey, request.getPlanDate(), request.isReplaceDate());
+        }
+
         //3. 식단 생성 (검증 실패 시 한 번 재요청). 하루 상한을 넘으면 429, 실패하면 횟수를 돌려준다
         aiUsageQuota.acquire(tossUserKey, AiFeature.GENERATION);
         MealPlanResponse aiMealPlanResponse;
@@ -68,9 +75,21 @@ public class MealPlanService {
             throw e;
         }
 
+        //5. 날짜 지정. 생성 사이에 그날 다른 식단이 생기는 드문 경우엔 날짜 없이 둔다 (식단은 이미 저장됨)
+        LocalDate planDate = null;
+        if (request.getPlanDate() != null) {
+            try {
+                planDate = mealIntakeService.schedule(tossUserKey, mealPlanId, request.getPlanDate(), request.isReplaceDate())
+                        .getPlanDate();
+            } catch (RuntimeException e) {
+                log.warn("생성한 식단 날짜 지정 실패. mealPlanId={}, cause={}", mealPlanId, e.getMessage());
+            }
+        }
+
         return MealPlanGenerateResponse.builder()
                 .mealPlanId(mealPlanId)
                 .title(MealPlanNamer.defaultName(request.getGoal(), aiMealPlanResponse))
+                .planDate(planDate)
                 .height(request.getHeight())
                 .weight(request.getWeight())
                 .age(request.getAge())

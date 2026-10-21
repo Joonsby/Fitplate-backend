@@ -1,4 +1,4 @@
-// 식단 생성의 하루 상한·첫 생성 무료 판정과, 저장 식단을 다른 날짜로 복사하는 규칙을 검증합니다.
+// 식단 생성의 하루 상한·첫 생성 무료 판정, 만들면서 날짜 지정, 저장 식단을 다른 날짜로 복사하는 규칙을 검증합니다.
 package com.fitplate.fitplateapi.mealplan;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -131,6 +131,40 @@ class MealPlanCopyAndQuotaTests {
         GenerationQuotaResponse quota = mealPlanService.getGenerationQuota(USER_KEY);
         assertThat(quota.usedToday()).isZero();
         assertThat(quota.adRequired()).isFalse();
+    }
+
+    @Test
+    void generationCanScheduleTheNewPlanRightAway() {
+        MealPlanRequest dated = MealPlanRequest.builder()
+                .height(175).weight(70).age(30).gender("MALE").goal("MAINTAIN").planDate(TODAY.plusDays(1)).build();
+
+        var response = mealPlanService.generateMealPlan(USER_KEY, dated);
+
+        assertThat(response.getPlanDate()).isEqualTo(TODAY.plusDays(1));
+        assertThat(jdbc.queryForObject("SELECT plan_date FROM meal_plans WHERE meal_plan_id = ?", LocalDate.class,
+                response.getMealPlanId())).isEqualTo(TODAY.plusDays(1));
+    }
+
+    @Test
+    void takenDateIsRejectedBeforeCallingAiUnlessReplacing() {
+        MealPlanRequest dated = MealPlanRequest.builder()
+                .height(175).weight(70).age(30).gender("MALE").goal("MAINTAIN").planDate(TODAY).build();
+        Long first = mealPlanService.generateMealPlan(USER_KEY, dated).getMealPlanId();
+
+        assertThatThrownBy(() -> mealPlanService.generateMealPlan(USER_KEY, dated))
+                .isInstanceOf(MealPlanConflictException.class)
+                .extracting("code").isEqualTo(MealPlanConflictException.DATE_TAKEN);
+        // 거절은 AI 를 부르기 전이라 생성 횟수가 늘지 않는다
+        assertThat(mealPlanService.getGenerationQuota(USER_KEY).usedToday()).isEqualTo(1);
+
+        MealPlanRequest replacing = MealPlanRequest.builder()
+                .height(175).weight(70).age(30).gender("MALE").goal("MAINTAIN").planDate(TODAY).replaceDate(true).build();
+        Long second = mealPlanService.generateMealPlan(USER_KEY, replacing).getMealPlanId();
+
+        assertThat(jdbc.queryForObject("SELECT plan_date FROM meal_plans WHERE meal_plan_id = ?", LocalDate.class, second))
+                .isEqualTo(TODAY);
+        assertThat(jdbc.queryForObject("SELECT plan_date FROM meal_plans WHERE meal_plan_id = ?", LocalDate.class, first))
+                .isNull();
     }
 
     @Test

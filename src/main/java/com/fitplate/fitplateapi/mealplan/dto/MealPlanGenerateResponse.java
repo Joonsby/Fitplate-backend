@@ -15,6 +15,8 @@ public class MealPlanGenerateResponse {
     private Long mealPlanId;
     /** 자동으로 만든 식단 이름. */
     private String title;
+    /** 지정된 날짜. 날짜 없이 만들었으면 null. */
+    private java.time.LocalDate planDate;
 
     private Integer height;
     private Integer weight;

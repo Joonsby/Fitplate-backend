@@ -66,6 +66,24 @@ public class MealIntakeService {
         return SavedMealPlanResponse.from(mealPlanRepository.save(copy));
     }
 
+    /**
+     * 새 식단을 planDate 에 넣을 수 있는지 미리 확인한다. AI 를 부르기 전에 써서 헛된 생성을 막는다.
+     * 다른 식단이 있는데 replace 가 아니면 DATE_TAKEN, 그 식단에 먹은 끼니가 있으면 HAS_INTAKE.
+     */
+    @Transactional(readOnly = true)
+    public void requireDateAvailable(String tossUserKey, LocalDate planDate, boolean replace) {
+        mealPlanRepository.findByUserAndPlanDate(ownership.findUser(tossUserKey), planDate).ifPresent(other -> {
+            if (!replace) {
+                throw new MealPlanConflictException(MealPlanConflictException.DATE_TAKEN,
+                        "이 날짜에는 이미 다른 식단이 지정돼 있어요.");
+            }
+            if (other.hasEatenMeal()) {
+                throw new MealPlanConflictException(MealPlanConflictException.HAS_INTAKE,
+                        "이 날짜의 식단에 먹었다고 체크한 끼니가 있어 바꿀 수 없어요.");
+            }
+        });
+    }
+
     /** planDate 를 쓰고 있는 다른 식단이 있으면 replace 일 때만 그 지정을 푼다. */
     private void releaseDate(MealPlan plan, LocalDate planDate, boolean replace) {
         Optional<MealPlan> occupant = mealPlanRepository.findByUserAndPlanDate(plan.getUser(), planDate);

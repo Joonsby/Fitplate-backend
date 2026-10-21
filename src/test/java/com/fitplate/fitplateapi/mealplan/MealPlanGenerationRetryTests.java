@@ -22,6 +22,7 @@ import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.personalization.service.PersonalizationService;
 import com.fitplate.fitplateapi.aiusage.service.AiUsageQuota;
+import com.fitplate.fitplateapi.mealplan.service.MealIntakeService;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,7 @@ class MealPlanGenerationRetryTests {
     @MockitoBean private UserProfileService userProfileService;
     @MockitoBean private PersonalizationService personalizationService;
     @MockitoBean private AiUsageQuota aiUsageQuota;
+    @MockitoBean private MealIntakeService mealIntakeService;
     @MockitoBean private NutritionCalculator nutritionCalculator;
 
     private final MealPlanRequest request = MealPlanRequest.builder()

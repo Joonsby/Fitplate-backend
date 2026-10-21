@@ -16,6 +16,7 @@ import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
 import com.fitplate.fitplateapi.personalization.service.PersonalizationService;
 import com.fitplate.fitplateapi.aiusage.service.AiUsageQuota;
+import com.fitplate.fitplateapi.mealplan.service.MealIntakeService;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -69,6 +70,7 @@ class MealPlanPersistenceTests {
     @MockitoBean private UserProfileService userProfileService;
     @MockitoBean private PersonalizationService personalizationService;
     @MockitoBean private AiUsageQuota aiUsageQuota;
+    @MockitoBean private MealIntakeService mealIntakeService;
     @MockitoBean private NutritionCalculator nutritionCalculator;
 
     @BeforeEach

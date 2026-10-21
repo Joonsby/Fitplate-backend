@@ -1,6 +1,7 @@
 package com.fitplate.fitplateapi.mealplan.dto;
 
 import com.fitplate.fitplateapi.user.domain.FoodCategory;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,5 +52,11 @@ public class MealPlanRequest {
 
     /** 알레르기 분류. null 이면 저장된 값을 그대로 쓴다. */
     private List<FoodCategory> allergyFoodCategories;
+
+    /** 만든 식단을 바로 지정할 날짜. null 이면 날짜 없이 저장한다. */
+    private LocalDate planDate;
+
+    /** planDate 에 다른 식단이 있으면 그 식단의 지정을 풀고 새 식단으로 바꾼다. */
+    private boolean replaceDate;
 }
 
