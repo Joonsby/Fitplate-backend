@@ -1,6 +1,12 @@
 package com.fitplate.fitplateapi.global.error;
 
+import com.fitplate.fitplateapi.exception.AiDailyLimitExceededException;
 import com.fitplate.fitplateapi.exception.DuplicateMealPlanException;
+import com.fitplate.fitplateapi.exception.AiResultUnavailableException;
+import com.fitplate.fitplateapi.exception.InvalidFoodReplacementException;
+import com.fitplate.fitplateapi.exception.InvalidRequestException;
+import com.fitplate.fitplateapi.exception.MealPlanConflictException;
+import com.fitplate.fitplateapi.exception.MealPlanAccessDeniedException;
 import com.fitplate.fitplateapi.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -102,6 +108,70 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    @ExceptionHandler(MealPlanAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleMealPlanAccessDenied(
+            MealPlanAccessDeniedException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidFoodReplacementException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFoodReplacement(
+            InvalidFoodReplacementException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AiResultUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleAiResultUnavailable(
+            AiResultUnavailableException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AiDailyLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleAiDailyLimitExceeded(
+            AiDailyLimitExceededException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request, AiDailyLimitExceededException.CODE);
+    }
+
+    @ExceptionHandler(MealPlanConflictException.class)
+    public ResponseEntity<ErrorResponse> handleMealPlanConflict(
+            MealPlanConflictException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.CONFLICT, ex.getMessage(), request, ex.getCode());
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(
+            InvalidRequestException ex,
+            WebRequest request
+    ) {
+        return respond(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    private ResponseEntity<ErrorResponse> respond(HttpStatus status, String message, WebRequest request) {
+        return respond(status, message, request, null);
+    }
+
+    private ResponseEntity<ErrorResponse> respond(HttpStatus status, String message, WebRequest request, String code) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(status.value())
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .code(code)
+                .build();
+
+        return ResponseEntity.status(status).body(errorResponse);
     }
 }
 

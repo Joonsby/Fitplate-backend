@@ -27,5 +27,8 @@ public class ErrorResponse {
 
     /** 에러가 발생한 API 요청 경로. */
     private String path;
+
+    /** 앱이 상황을 구분할 때 쓰는 에러 코드 (예: DATE_TAKEN). 없으면 null. */
+    private String code;
 }
 

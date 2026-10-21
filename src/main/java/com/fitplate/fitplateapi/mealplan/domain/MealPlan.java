@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.List;
  * 식단 계획 Entity (meal_plans 테이블 매핑).
  */
 @Entity
-@Table(name = "meal_plans")
+@Table(name = "meal_plans", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_meal_plans_user_plan_date", columnNames = {"user_id", "plan_date"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MealPlan {
@@ -31,7 +34,7 @@ public class MealPlan {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** 사용자의 목표 (예: WEIGHT_LOSS, MUSCLE_GAIN). */
+    /** 사용자의 목표 (MAINTAIN, WEIGHT_LOSS, WEIGHT_GAIN). */
     @Column(nullable = false, length = 20)
     private String goal;
 
@@ -104,6 +107,56 @@ public class MealPlan {
     /** 체지방률 (%). */
     @Column
     private BigDecimal bodyFatRate;
+
+    /** 이 식단을 따르는 날짜. 사용자당 하루 하나이고, null 이면 날짜 미지정. */
+    @Column(name = "plan_date")
+    private LocalDate planDate;
+
+    /** 사용자가 지정한 이름. null 이면 displayTitle() 이 자동 이름을 만든다. */
+    @Column(length = 30)
+    private String title;
+
+    public void schedule(LocalDate planDate) {
+        this.planDate = planDate;
+    }
+
+    /** 같은 음식으로 새 식단을 만든다. 날짜와 섭취 기록은 옮기지 않고, 직접 정한 이름은 그대로 쓴다. */
+    public MealPlan copy() {
+        MealPlan copy = MealPlan.builder()
+                .user(user).goal(goal).height(height).weight(weight).age(age).gender(gender)
+                .bmi(bmi).bodyFatRate(bodyFatRate)
+                .targetCalories(targetCalories).bmr(bmr).tdee(tdee)
+                .proteinGram(proteinGram).carbsGram(carbsGram).fatGram(fatGram)
+                .aiResponseJson(aiResponseJson)
+                .build();
+        copy.title = title;
+        for (MealPlanMeal meal : meals) {
+            MealPlanMeal mealCopy = MealPlanMeal.builder()
+                    .mealType(meal.getMealType()).title(meal.getTitle()).sortOrder(meal.getSortOrder()).build();
+            copy.addMeal(mealCopy);
+            for (MealPlanFood food : meal.getFoods()) {
+                mealCopy.addFood(MealPlanFood.builder()
+                        .name(food.getName()).amount(food.getAmount()).calories(food.getCalories())
+                        .protein(food.getProtein()).carbohydrate(food.getCarbohydrate()).fat(food.getFat())
+                        .shoppingKeyword(food.getShoppingKeyword()).sortOrder(food.getSortOrder())
+                        .build());
+            }
+        }
+        return copy;
+    }
+
+    /** 비어 있으면 자동 이름으로 되돌린다. */
+    public void rename(String title) {
+        this.title = title == null || title.isBlank() ? null : title.trim();
+    }
+
+    public String displayTitle() {
+        return title != null ? title : MealPlanNamer.defaultName(this);
+    }
+
+    public boolean hasEatenMeal() {
+        return meals.stream().anyMatch(MealPlanMeal::isEaten);
+    }
 
 
     /** Service에서 식단 저장 시 모든 필드를 받아 초기화. */
