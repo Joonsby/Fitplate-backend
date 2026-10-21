@@ -11,6 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MealPlanGenerateResponse {
 
+    /** 저장된 식단 ID. 음식 바꾸기에 쓴다. */
+    private Long mealPlanId;
+    /** 자동으로 만든 식단 이름. */
+    private String title;
+
     private Integer height;
     private Integer weight;
     private Integer age;
