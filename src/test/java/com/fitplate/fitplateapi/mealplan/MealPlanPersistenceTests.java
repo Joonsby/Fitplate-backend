@@ -6,12 +6,16 @@ import com.fitplate.fitplateapi.ai.MealPlanAiClient;
 import com.fitplate.fitplateapi.mealplan.dto.*;
 import com.fitplate.fitplateapi.mealplan.service.MealPlanService;
 import com.fitplate.fitplateapi.mealplan.service.MealPlanStorageService;
+import com.fitplate.fitplateapi.mealplan.service.MealPlanValidator;
 import com.fitplate.fitplateapi.nutrition.dto.NutritionResult;
 import com.fitplate.fitplateapi.nutrition.service.NutritionCalculator;
+import com.fitplate.fitplateapi.user.domain.FoodPreferences;
 import com.fitplate.fitplateapi.user.domain.User;
 import com.fitplate.fitplateapi.user.domain.UserProfile;
 import com.fitplate.fitplateapi.user.repository.UserProfileRepository;
 import com.fitplate.fitplateapi.user.repository.UserRepository;
+import com.fitplate.fitplateapi.personalization.service.PersonalizationService;
+import com.fitplate.fitplateapi.aiusage.service.AiUsageQuota;
 import com.fitplate.fitplateapi.user.service.UserProfileService;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -38,6 +42,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @DataJpaTest(properties = {
@@ -47,7 +53,7 @@ import static org.mockito.Mockito.when;
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@Import({MealPlanStorageService.class, MealPlanService.class, MealPlanPersistenceTests.JsonConfiguration.class})
+@Import({MealPlanStorageService.class, MealPlanService.class, MealPlanValidator.class, MealPlanPersistenceTests.JsonConfiguration.class})
 class MealPlanPersistenceTests {
     private static final String USER_KEY = "relational-test-user";
 
@@ -61,6 +67,8 @@ class MealPlanPersistenceTests {
 
     @MockitoBean private MealPlanAiClient aiClient;
     @MockitoBean private UserProfileService userProfileService;
+    @MockitoBean private PersonalizationService personalizationService;
+    @MockitoBean private AiUsageQuota aiUsageQuota;
     @MockitoBean private NutritionCalculator nutritionCalculator;
 
     @BeforeEach
@@ -157,7 +165,8 @@ class MealPlanPersistenceTests {
         MealPlanResponse response = sample();
         when(nutritionCalculator.calculate(180, 75, 30, 20.0, "MALE", "MAINTAIN"))
                 .thenReturn(nutrition);
-        when(aiClient.generateMealPlan(request, nutrition)).thenAnswer(invocation -> {
+        when(userProfileService.getFoodPreferences(USER_KEY)).thenReturn(FoodPreferences.none());
+        when(aiClient.generateMealPlan(eq(request), eq(nutrition), any(), any(), any())).thenAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return response;
         });
@@ -165,6 +174,8 @@ class MealPlanPersistenceTests {
         MealPlanGenerateResponse generated = mealPlanService.generateMealPlan(USER_KEY, request);
 
         assertThat(generated.getAiMealPlanResponse()).usingRecursiveComparison().isEqualTo(response);
+        assertThat(generated.getMealPlanId())
+                .isEqualTo(jdbc.queryForObject("SELECT meal_plan_id FROM meal_plans", Long.class));
         assertThat(count("meal_plan_meals")).isEqualTo(3);
         assertThat(count("meal_plan_foods")).isEqualTo(6);
     }

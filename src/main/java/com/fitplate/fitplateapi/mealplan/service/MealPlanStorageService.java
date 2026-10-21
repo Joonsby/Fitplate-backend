@@ -32,8 +32,9 @@ public class MealPlanStorageService {
     private final MealPlanRepository mealPlanRepository;
     private final ObjectMapper objectMapper;
 
+    /** 저장한 식단 ID 를 돌려준다. */
     @Transactional
-    public void saveGeneratedMealPlan(String tossUserKey, MealPlanRequest request,
+    public Long saveGeneratedMealPlan(String tossUserKey, MealPlanRequest request,
                                       NutritionResult nutritionResult, MealPlanResponse response) {
         User user = userRepository.findByTossUserKey(tossUserKey)
                 .orElseThrow(() -> new ResourceNotFoundException(tossUserKey, "사용자를 찾을 수 없습니다"));
@@ -88,7 +89,7 @@ public class MealPlanStorageService {
                         .build());
             }
         }
-        mealPlanRepository.save(plan);
+        return mealPlanRepository.save(plan).getId();
     }
 
     private BigDecimal toDecimal(Double value) {

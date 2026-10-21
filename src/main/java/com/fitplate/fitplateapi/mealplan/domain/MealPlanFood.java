@@ -62,6 +62,18 @@ public class MealPlanFood {
         this.sortOrder = sortOrder;
     }
 
+    /** 같은 자리(끼니·순서)는 그대로 두고 음식 내용만 바꾼다. */
+    public void replaceWith(String name, String amount, Integer calories, BigDecimal protein,
+                            BigDecimal carbohydrate, BigDecimal fat, String shoppingKeyword) {
+        this.name = name;
+        this.amount = amount;
+        this.calories = calories;
+        this.protein = protein;
+        this.carbohydrate = carbohydrate;
+        this.fat = fat;
+        this.shoppingKeyword = shoppingKeyword;
+    }
+
     void assignTo(MealPlanMeal meal) {
         this.meal = meal;
     }

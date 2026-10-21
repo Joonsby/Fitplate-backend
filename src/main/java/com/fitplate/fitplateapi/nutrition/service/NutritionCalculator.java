@@ -58,7 +58,7 @@ public class NutritionCalculator {
         // goal별 감량/증량 칼로리 조정.
         return switch (goal) {
             case "WEIGHT_LOSS" -> tdee - 400;
-            case "MUSCLE_GAIN" -> tdee + 300;
+            case "WEIGHT_GAIN", "MUSCLE_GAIN" -> tdee + 300;
             default -> tdee;
         };
     }
