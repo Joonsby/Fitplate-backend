@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,10 @@ public class MealPlanMeal {
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder;
 
+    /** 먹었다고 체크한 시각. null 이면 미섭취. */
+    @Column(name = "eaten_at")
+    private LocalDateTime eatenAt;
+
     @OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     @BatchSize(size = 50)
@@ -47,6 +52,30 @@ public class MealPlanMeal {
         this.mealType = mealType;
         this.title = title;
         this.sortOrder = sortOrder;
+    }
+
+    /** 끼니 재생성 시 기존 음식을 모두 지운다. 새 음식을 넣기 전에 flush 해야 순서 유니크 키가 겹치지 않는다. */
+    public void clearFoods() {
+        foods.clear();
+    }
+
+    public boolean isEaten() {
+        return eatenAt != null;
+    }
+
+    /** 이미 먹은 끼니면 처음 체크한 시각을 유지한다. */
+    public void markEaten(LocalDateTime now) {
+        if (eatenAt == null) {
+            eatenAt = now;
+        }
+    }
+
+    public void clearEaten() {
+        eatenAt = null;
+    }
+
+    public void rename(String title) {
+        this.title = title;
     }
 
     void assignTo(MealPlan mealPlan) {
